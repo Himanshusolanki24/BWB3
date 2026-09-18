@@ -6,7 +6,7 @@ import { EvolutionLoop } from '@/components/evolution/EvolutionLoop';
 import { CurrentEvolution } from '@/components/evolution/CurrentEvolution';
 import { EvolutionHistoryTable } from '@/components/evolution/EvolutionHistory';
 import { evolutionHistory } from '@/data/adaptations';
-import { Dna, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 
 export default function EvolutionEnginePage() {
   const [history, setHistory] = useState(evolutionHistory);
@@ -23,10 +23,10 @@ export default function EvolutionEnginePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Evolution Engine" subtitle="Autonomous feedback loops that continuously refine honeynet deception.">
-        <button onClick={handleSimulateCycle} disabled={isIterating} className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-amber-500 text-stone-50 font-semibold text-xs hover:bg-amber-400 transition-colors shadow-sm disabled:opacity-50">
-          <RefreshCw className={`w-3.5 h-3.5 ${isIterating ? 'animate-spin' : ''}`} />
-          <span>{isIterating ? 'Synthesizing...' : 'Simulate Cycle'}</span>
+      <PageHeader title="Evolution" subtitle="How the engine watches, decides and rebuilds the decoys. Pick a stage to see what goes in and what comes out.">
+        <button onClick={handleSimulateCycle} disabled={isIterating} className="btn btn-primary">
+          <RefreshCw className={`h-3.5 w-3.5 ${isIterating ? 'animate-spin' : ''}`} />
+          {isIterating ? 'Running cycle' : 'Run a cycle'}
         </button>
       </PageHeader>
       <EvolutionLoop />

@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, Terminal, Pause, Play, ArrowUpRight } from 'lucide-react';
-import type { Attack } from '@/types';
-import { getRiskBgColor } from '@/lib/utils';
+import { Pause, Play } from 'lucide-react';
 import Link from 'next/link';
+import type { Attack } from '@/types';
+import { Panel, RiskBadge, Tag } from '@/components/ui';
 
 interface AttackStreamProps {
   initialAttacks: Attack[];
@@ -57,152 +57,76 @@ const simulatedIncomingAttacks: Attack[] = [
 export function AttackStream({ initialAttacks }: AttackStreamProps) {
   const [attacks, setAttacks] = useState<Attack[]>(initialAttacks);
   const [isStreaming, setIsStreaming] = useState(true);
-  const [hoveredAttack, setHoveredAttack] = useState<Attack | null>(null);
 
   useEffect(() => {
     if (!isStreaming) return;
     let index = 0;
     const interval = setInterval(() => {
-      if (index < simulatedIncomingAttacks.length) {
-        const nextAttack = {
-          ...simulatedIncomingAttacks[index],
-          timestamp: new Date().toTimeString().split(' ')[0],
-          id: `atk-stream-${Date.now()}-${index}`,
-        };
-        setAttacks((prev) => [nextAttack, ...prev.slice(0, 11)]);
-        index = (index + 1) % simulatedIncomingAttacks.length;
-      }
+      const next = {
+        ...simulatedIncomingAttacks[index],
+        timestamp: new Date().toTimeString().split(' ')[0],
+        id: `atk-stream-${Date.now()}-${index}`,
+      };
+      setAttacks((prev) => [next, ...prev.slice(0, 9)]);
+      index = (index + 1) % simulatedIncomingAttacks.length;
     }, 4500);
     return () => clearInterval(interval);
   }, [isStreaming]);
 
   return (
-    <div className="card-interactive p-5 relative overflow-hidden flex flex-col bg-white border border-stone-200 shadow-xs">
-      <div className="flex items-center justify-between pb-4 mb-4 border-b border-stone-200">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-rose-50 border border-rose-200">
-            <ShieldAlert className="w-4 h-4 text-rose-600" />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-stone-900 tracking-wide flex items-center gap-2">
-              Live Attack Activity
-              <span className="relative flex h-2 w-2">
-                {isStreaming && (
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
-                )}
-                <span
-                  className={`relative inline-flex rounded-full h-2 w-2 ${
-                    isStreaming ? 'bg-emerald-600' : 'bg-stone-400'
-                  }`}
-                />
-              </span>
-            </h3>
-            <p className="text-xs text-stone-500 font-medium">
-              Real-time honeypot sensor telemetry and command capture
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setIsStreaming(!isStreaming)}
-            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 transition-colors border border-stone-300 shadow-xs"
-            title={isStreaming ? 'Pause stream' : 'Resume stream'}
-          >
-            {isStreaming ? (
-              <>
-                <Pause className="w-3.5 h-3.5 text-amber-700" />
-                <span>Pause</span>
-              </>
-            ) : (
-              <>
-                <Play className="w-3.5 h-3.5 text-emerald-700" />
-                <span>Stream</span>
-              </>
-            )}
+    <Panel
+      title={
+        <span className="flex items-center gap-2">
+          Live commands
+          <span className={isStreaming ? 'live-dot text-signal' : 'h-[7px] w-[7px] rounded-full bg-rule-strong'} />
+        </span>
+      }
+      note="Every keystroke and request an attacker sends to a decoy, newest first"
+      action={
+        <>
+          <button onClick={() => setIsStreaming(!isStreaming)} className="btn">
+            {isStreaming ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+            {isStreaming ? 'Pause' : 'Resume'}
           </button>
-          <Link
-            href="/live-attacks"
-            className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-amber-50 text-amber-800 hover:bg-amber-100 transition-colors border border-amber-300 shadow-xs"
-          >
-            <span>Monitor</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-      </div>
-      <div className="overflow-x-auto min-h-[340px]">
-        <table className="w-full text-left text-xs border-collapse">
+          <Link href="/live-attacks" className="btn">Open monitor</Link>
+        </>
+      }
+    >
+      <div className="-mx-5 overflow-x-auto px-5">
+        <table className="data-table min-w-[760px]">
           <thead>
-            <tr className="border-b border-stone-200 text-stone-500 uppercase text-[10px] tracking-wider font-bold">
-              <th className="pb-2.5 font-bold">Time</th>
-              <th className="pb-2.5 font-bold">Source IP</th>
-              <th className="pb-2.5 font-bold">Honeypot</th>
-              <th className="pb-2.5 font-bold">Captured Action</th>
-              <th className="pb-2.5 font-bold">Classification</th>
-              <th className="pb-2.5 font-bold text-right">Risk</th>
+            <tr>
+              <th>Time</th>
+              <th>Source</th>
+              <th>Decoy</th>
+              <th>Command</th>
+              <th>Intent</th>
+              <th className="text-right">Risk</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-stone-100 font-mono">
+          <tbody>
             <AnimatePresence initial={false}>
-              {attacks.map((attack) => (
+              {attacks.map((a) => (
                 <motion.tr
-                  key={attack.id}
-                  initial={{ opacity: 0, x: -16 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.35 }}
-                  onMouseEnter={() => setHoveredAttack(attack)}
-                  onMouseLeave={() => setHoveredAttack(null)}
-                  className="hover:bg-amber-50/50 cursor-pointer transition-colors"
+                  key={a.id}
+                  initial={{ opacity: 0, backgroundColor: '#FDF3C4' }}
+                  animate={{ opacity: 1, backgroundColor: 'rgba(253,243,196,0)' }}
+                  transition={{ opacity: { duration: 0.3 }, backgroundColor: { duration: 2.4 } }}
                 >
-                  <td className="py-2.5 pr-3 text-stone-600 font-medium whitespace-nowrap">
-                    {attack.timestamp}
+                  <td className="whitespace-nowrap font-mono text-xs text-pencil">{a.timestamp}</td>
+                  <td className="whitespace-nowrap font-mono text-xs font-medium text-ink">{a.sourceIP}</td>
+                  <td className="whitespace-nowrap"><Tag>{a.honeypot}</Tag></td>
+                  <td className="max-w-[320px] truncate font-mono text-xs text-ink" title={a.action}>
+                    <span className="mr-1.5 text-pencil">$</span>{a.action}
                   </td>
-                  <td className="py-2.5 pr-3 text-teal-700 font-bold whitespace-nowrap">
-                    {attack.sourceIP}
-                  </td>
-                  <td className="py-2.5 pr-3 whitespace-nowrap">
-                    <span className="px-2 py-0.5 rounded bg-stone-100 border border-stone-300 text-stone-800 text-[11px] font-semibold">
-                      {attack.honeypot}
-                    </span>
-                  </td>
-                  <td className="py-2.5 pr-3 max-w-[280px] truncate text-stone-900 font-mono font-bold text-[11px] hover:text-amber-700 transition-colors">
-                    <div className="flex items-center gap-1.5">
-                      <Terminal className="w-3.5 h-3.5 text-stone-400 shrink-0" />
-                      <span className="truncate">{attack.action}</span>
-                    </div>
-                  </td>
-                  <td className="py-2.5 pr-3 text-stone-800 font-medium whitespace-nowrap text-xs">
-                    {attack.behavior}
-                  </td>
-                  <td className="py-2.5 text-right whitespace-nowrap">
-                    <span
-                      className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${getRiskBgColor(
-                        attack.risk
-                      )}`}
-                    >
-                      {attack.risk}
-                    </span>
-                  </td>
+                  <td className="whitespace-nowrap text-graphite">{a.behavior}</td>
+                  <td className="text-right"><RiskBadge risk={a.risk} /></td>
                 </motion.tr>
               ))}
             </AnimatePresence>
           </tbody>
         </table>
       </div>
-      {hoveredAttack && (
-        <div className="mt-3 pt-3 border-t border-stone-200 flex items-center justify-between text-[11px] text-stone-600 bg-stone-50 px-3.5 py-2 rounded-lg border border-stone-200/80 shadow-xs">
-          <div className="flex items-center gap-2">
-            <span className="text-stone-500 font-medium">Target Node:</span>
-            <span className="text-stone-900 font-bold">{hoveredAttack.honeypot}</span>
-            <span className="text-stone-300">|</span>
-            <span className="text-stone-500 font-medium">Command:</span>
-            <span className="font-mono text-amber-800 font-bold">{hoveredAttack.action}</span>
-          </div>
-          <span className="text-stone-500 font-medium">
-            Session ID: <strong className="text-stone-700">{hoveredAttack.sessionId}</strong>
-          </span>
-        </div>
-      )}
-    </div>
+    </Panel>
   );
 }

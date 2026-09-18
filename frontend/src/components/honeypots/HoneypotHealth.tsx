@@ -1,54 +1,51 @@
 'use client';
 
-import { Server, Activity, ShieldCheck, Cpu, HardDrive } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import type { Honeypot } from '@/types';
+import { Panel, ChartTooltip } from '@/components/ui';
+import { CHART, chartAxis } from '@/lib/utils';
 
-interface HoneypotHealthProps {
-  honeypots: Honeypot[];
-}
+export function HoneypotHealthOverview({ honeypots }: { honeypots: Honeypot[] }) {
+  const active = honeypots.filter((h) => h.status === 'ACTIVE').length;
+  const decoys = honeypots.reduce((n, h) => n + h.totalDecoys, 0);
+  const health = Math.round(honeypots.reduce((n, h) => n + h.health, 0) / honeypots.length);
+  const attacks = honeypots.reduce((n, h) => n + h.attacksDetected, 0);
+  const byAttacks = [...honeypots].sort((a, b) => b.attacksDetected - a.attacksDetected);
+  const busiest = byAttacks[0];
 
-export function HoneypotHealthOverview({ honeypots }: HoneypotHealthProps) {
-  const activeCount = honeypots.filter((h) => h.status === 'ACTIVE').length;
-  const totalDecoys = honeypots.reduce((acc, h) => acc + h.totalDecoys, 0);
-  const avgHealth = Math.round(honeypots.reduce((acc, h) => acc + h.health, 0) / honeypots.length);
-  const totalAttacksCaptured = honeypots.reduce((acc, h) => acc + h.attacksDetected, 0);
+  const metrics = [
+    { label: 'Nodes active', value: `${active} of ${honeypots.length}` },
+    { label: 'Average health', value: `${health}%` },
+    { label: 'Decoys planted', value: decoys },
+    { label: 'Attacks captured', value: attacks },
+  ];
 
   return (
-    <div className="card-interactive p-6 space-y-5">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-300">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-            <Activity className="w-5 h-5 text-amber-400" style={{ animation: 'pulse-glow 2s ease-in-out infinite' }} />
-          </div>
-          <div>
-            <h2 className="text-base font-semibold text-stone-800">Sandbox Cluster Fleet Status</h2>
-            <p className="text-xs text-stone-600">Isolated multi-protocol deception nodes</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-amber-400" style={{ animation: 'pulse-glow 2s ease-in-out infinite' }} />
-            99.98% Uptime
-          </span>
-        </div>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: 'Fleet Health', value: `${avgHealth}%`, sub: 'Normal baseline', color: 'amber', icon: ShieldCheck },
-          { label: 'Active Nodes', value: `${activeCount} / ${honeypots.length}`, sub: '1 deploying, 1 idle', color: 'blue', icon: Server },
-          { label: 'Decoys', value: `${totalDecoys}`, sub: 'Synthetic assets seeded', color: 'orange', icon: HardDrive },
-          { label: 'Attacks', value: `${totalAttacksCaptured}`, sub: 'Logged to intelligence lake', color: 'amber', icon: Activity },
-        ].map((metric) => (
-          <div key={metric.label} className="p-4 rounded-xl bg-stone-200/60 border border-stone-300/50">
-            <div className="flex items-center justify-between text-xs text-stone-600 mb-1">
-              <span>{metric.label}</span>
-              <metric.icon className="w-3.5 h-3.5 text-amber-400" />
+    <Panel title="Fleet" note={busiest ? `${busiest.name} is drawing the most attention with ${busiest.attacksDetected} attacks` : undefined}>
+      <div className="grid gap-6 lg:grid-cols-[1fr_1.6fr]">
+        <dl className="grid grid-cols-2 gap-px self-start overflow-hidden rounded-lg border border-rule bg-rule">
+          {metrics.map((m) => (
+            <div key={m.label} className="bg-sheet p-4">
+              <dt className="text-xs text-pencil">{m.label}</dt>
+              <dd className="mt-1 text-2xl font-semibold tabular-nums tracking-tight text-ink">{m.value}</dd>
             </div>
-            <div className="text-2xl font-bold text-stone-800 font-mono">{metric.value}</div>
-            <div className="text-[11px] text-stone-600 mt-1">{metric.sub}</div>
-          </div>
-        ))}
+          ))}
+        </dl>
+        <div className="h-56">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={byAttacks} layout="vertical" margin={{ top: 0, right: 16, left: 8, bottom: 0 }} barSize={14}>
+              <XAxis type="number" {...chartAxis} axisLine={false} />
+              <YAxis type="category" dataKey="name" {...chartAxis} axisLine={false} width={92} tick={{ fill: CHART.ink, fontSize: 11 }} />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(23,32,72,0.05)' }} />
+              <Bar isAnimationActive={false} dataKey="attacksDetected" name="Attacks captured" radius={[0, 3, 3, 0]}>
+                {byAttacks.map((h, i) => (
+                  <Cell key={h.id} fill={i === 0 ? CHART.lure : CHART.ink} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
-    </div>
+    </Panel>
   );
 }

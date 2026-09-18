@@ -1,114 +1,130 @@
 @import "tailwindcss";
 
+/*
+  Field-instrument palette: cool paper, Prussian ink, highlighter yellow.
+  Yellow ("lure") marks deception — decoys, adaptations, the thing you're on.
+  Red ("signal") is reserved for attacker activity and critical risk.
+*/
 @theme {
-  --color-honey-bg: #FAF8F5;
-  --color-honey-surface: #F5F0EB;
-  --color-honey-surface-2: #E7E0D8;
-  --color-honey-surface-3: #DDD8D0;
-  --color-honey-border: #D6CDC4;
-  --color-honey-border-bright: #C9C1B7;
-  --color-honey-text: #292524;
-  --color-honey-text-secondary: #5C554E;
-  --color-honey-text-muted: #78716C;
-  --color-honey-accent: #D97706;
-  --color-honey-accent-dim: #92400E;
-  --color-honey-accent-glow: rgba(217,119,6,0.1);
-  --color-honey-steel: #0D9488;
-  --color-honey-steel-dim: #115E59;
-  --color-honey-critical: #DC2626;
-  --color-honey-warning: #EA580C;
-  --color-honey-success: #0D9488;
+  --color-paper: #EDF0F4;
+  --color-sheet: #FFFFFF;
+  --color-sunk: #F5F7FA;
+  --color-rule: #DCE1E9;
+  --color-rule-strong: #BDC5D3;
 
-  --font-family-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-family-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  --color-ink: #172048;
+  --color-graphite: #4B5575;
+  --color-pencil: #646D8A;
+
+  --color-lure: #F6C90E;
+  --color-lure-soft: #FDF3C4;
+  --color-lure-ink: #6F5300;
+
+  --color-signal: #D5331F;
+  --color-signal-soft: #FCE9E6;
+  --color-ember: #C8620A;
+  --color-ember-soft: #FDF0E1;
+  --color-cobalt: #2E55E6;
+  --color-cobalt-soft: #E8EDFD;
+  --color-periwinkle: #A7B7F2;
+  --color-moss: #0F7A55;
+  --color-moss-soft: #E1F3EB;
+}
+
+@theme inline {
+  --font-sans: var(--font-schibsted), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, 'SF Mono', monospace;
 }
 
 @layer base {
-  * { border-color: var(--color-honey-border); }
+  * { border-color: var(--color-rule); }
+  html { background: var(--color-paper); }
   body {
-    background-color: var(--color-honey-bg);
-    color: var(--color-honey-text);
-    font-family: var(--font-family-sans);
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--color-honey-border-bright); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: var(--color-honey-text-muted); }
+  ::selection { background: var(--color-lure); color: var(--color-ink); }
+  :focus-visible { outline: 2px solid var(--color-cobalt); outline-offset: 2px; border-radius: 4px; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--color-rule-strong); border-radius: 8px; border: 2px solid transparent; background-clip: content-box; }
 }
 
 @layer components {
-  .card-interactive {
-    background: linear-gradient(180deg, rgba(245,240,235,0.98), rgba(231,224,216,0.95));
-    border: 1px solid var(--color-honey-border);
-    border-radius: 16px;
-    backdrop-filter: blur(8px);
-    transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  }
-  .card-interactive:hover {
-    border-color: rgba(217,119,6,0.3);
-    box-shadow: 0 0 0 1px rgba(217,119,6,0.1), 0 8px 32px rgba(0,0,0,0.08);
-    transform: translateY(-1px);
+  /* A sheet of paper laid on the desk: flat, one hairline, no glow. */
+  .sheet {
+    background: var(--color-sheet);
+    border: 1px solid var(--color-rule);
+    border-radius: 10px;
+    box-shadow: 0 1px 0 rgba(23, 32, 72, 0.04);
   }
 
-  .card-accent {
-    background: linear-gradient(180deg, rgba(217,119,6,0.05), rgba(245,240,235,0.95));
-    border: 1px solid rgba(217,119,6,0.15);
-    border-radius: 16px;
-    backdrop-filter: blur(8px);
+  /* Highlighter swipe — the one signature mark. */
+  .mark {
+    background-image: linear-gradient(
+      100deg,
+      transparent 0.2em,
+      var(--color-lure) 0.3em,
+      color-mix(in srgb, var(--color-lure) 85%, white) calc(100% - 0.3em),
+      transparent calc(100% - 0.2em)
+    );
+    background-size: 100% 0.62em;
+    background-position: 0 88%;
+    background-repeat: no-repeat;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
   }
 
-  .stat-card {
-    background: linear-gradient(135deg, rgba(245,240,235,0.98), rgba(231,224,216,0.95));
-    border: 1px solid var(--color-honey-border);
-    border-radius: 14px;
-    backdrop-filter: blur(6px);
-    transition: border-color 0.25s ease, box-shadow 0.25s ease;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-  }
-  .stat-card:hover {
-    border-color: rgba(217,119,6,0.12);
-    box-shadow: 0 0 0 1px rgba(217,119,6,0.05), 0 4px 16px rgba(0,0,0,0.06);
+  /* Graph paper, used only behind the headline chart. */
+  .graph-paper {
+    background-color: var(--color-sheet);
+    background-image:
+      linear-gradient(var(--color-sunk) 1px, transparent 1px),
+      linear-gradient(90deg, var(--color-sunk) 1px, transparent 1px);
+    background-size: 16px 16px;
   }
 
-  .glow-accent { box-shadow: 0 0 20px rgba(217,119,6,0.1), 0 0 40px rgba(217,119,6,0.03); }
-  .glow-steel { box-shadow: 0 0 20px rgba(13,148,136,0.1), 0 0 40px rgba(13,148,136,0.03); }
-
-  .shimmer {
-    background: linear-gradient(90deg, transparent, rgba(217,119,6,0.05), transparent);
-    background-size: 200% 100%;
-    animation: shimmer 2s ease-in-out infinite;
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    height: 2.125rem; padding: 0 0.875rem;
+    font-size: 0.8125rem; font-weight: 600;
+    border-radius: 7px; border: 1px solid var(--color-rule-strong);
+    background: var(--color-sheet); color: var(--color-ink);
+    transition: background-color 0.15s, border-color 0.15s;
+    white-space: nowrap;
   }
-  @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
+  .btn:hover { background: var(--color-sunk); border-color: var(--color-graphite); }
+  .btn:disabled { opacity: 0.55; cursor: progress; }
+  .btn-primary { background: var(--color-ink); border-color: var(--color-ink); color: #fff; }
+  .btn-primary:hover { background: #0E1535; border-color: #0E1535; }
 
-  .pulse-live { animation: pulse-glow 2s ease-in-out infinite; }
-  @keyframes pulse-glow {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
+  /* Segmented control */
+  .seg { display: inline-flex; padding: 3px; gap: 2px; border-radius: 8px; background: var(--color-sunk); border: 1px solid var(--color-rule); }
+  .seg > button { padding: 0.3rem 0.7rem; font-size: 0.75rem; font-weight: 600; border-radius: 5px; color: var(--color-graphite); white-space: nowrap; }
+  .seg > button:hover { color: var(--color-ink); }
+  .seg > button[aria-pressed='true'], .seg > button[aria-selected='true'] { background: var(--color-sheet); color: var(--color-ink); box-shadow: 0 0 0 1px var(--color-rule-strong); }
 
-  .focus-ring:focus-visible {
-    outline: 2px solid var(--color-honey-accent);
-    outline-offset: 2px;
+  .field {
+    width: 100%; height: 2.125rem; padding: 0 0.75rem;
+    font-size: 0.8125rem; color: var(--color-ink);
+    background: var(--color-sheet); border: 1px solid var(--color-rule-strong); border-radius: 7px;
   }
+  .field::placeholder { color: var(--color-pencil); }
+  .field:focus { outline: none; border-color: var(--color-cobalt); box-shadow: 0 0 0 3px var(--color-cobalt-soft); }
 
-  .table-row-hover { transition: background-color 0.15s ease; }
-  .table-row-hover:hover { background-color: rgba(217,119,6,0.04); }
+  /* Tables: rules, not stripes */
+  .data-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.8125rem; text-align: left; }
+  .data-table th { font-size: 0.75rem; font-weight: 500; color: var(--color-pencil); padding: 0 1rem 0.6rem 0; border-bottom: 1px solid var(--color-rule-strong); white-space: nowrap; }
+  .data-table td { padding: 0.65rem 1rem 0.65rem 0; border-bottom: 1px solid var(--color-rule); vertical-align: middle; }
+  .data-table tbody tr:last-child td { border-bottom: 0; }
+  .data-table tbody tr:hover td { background: var(--color-sunk); }
 
-  .label-tag {
-    font-size: 10px;
-    font-family: 'JetBrains Mono', monospace;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
+  .live-dot { position: relative; display: inline-block; width: 7px; height: 7px; border-radius: 99px; background: currentColor; }
+  .live-dot::after { content: ''; position: absolute; inset: -4px; border-radius: 99px; border: 1.5px solid currentColor; opacity: 0; animation: live-ring 2.4s ease-out infinite; }
+  @keyframes live-ring { 0% { transform: scale(0.5); opacity: 0.7; } 100% { transform: scale(1.4); opacity: 0; } }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pulse-live, .shimmer { animation: none; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }

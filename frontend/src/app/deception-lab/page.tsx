@@ -2,155 +2,163 @@
 
 import { useState } from 'react';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { deceptionFiles } from '@/data/adaptations';
-import {
-  Folder, FolderOpen, FileText, Key, Network, Globe, Server,
-  ShieldAlert, Lock, Database, CheckCircle,
-} from 'lucide-react';
+import { Panel, Tag } from '@/components/ui';
+import { FileText, Database, Lock, ShieldCheck } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+type TabId = 'files' | 'credentials' | 'services' | 'network' | 'web';
+
+const tabs: { id: TabId; label: string }[] = [
+  { id: 'files', label: 'Files' },
+  { id: 'credentials', label: 'Credentials' },
+  { id: 'services', label: 'Services' },
+  { id: 'network', label: 'Network' },
+  { id: 'web', label: 'Web traps' },
+];
+
+const files = [
+  { name: 'backup.sh', icon: FileText, reason: 'Script decoy', content: '#!/bin/bash\n# nightly backup\nmysqldump -u app_admin -p"$DB_PASS" production_orders > /var/backups/orders.sql' },
+  {
+    name: 'database.conf',
+    icon: Database,
+    reason: 'Planted because the attacker showed interest in databases',
+    content: '[database]\nhost = 10.0.1.50\nport = 3306\nuser = app_admin\npassword = {{HONEYTOKEN_CANARY_DB_PASS}}\ndbname = production_orders',
+  },
+  { name: 'passwords.txt', icon: Lock, reason: 'Credential harvesting bait', content: 'vpn: j.miller / {{CANARY_VPN}}\njira: admin / {{CANARY_JIRA}}' },
+  { name: 'employee_data.csv', icon: FileText, reason: 'Personal-data canary', content: 'id,name,email,ssn\n1041,Dana Ruiz,d.ruiz@corp.example,{{CANARY_SSN}}' },
+];
 
 export default function DeceptionLabPage() {
-  const [activeTab, setActiveTab] = useState<'files' | 'credentials' | 'services' | 'network' | 'web'>('files');
-  const [selectedFile, setSelectedFile] = useState({
-    name: 'database.conf',
-    path: '/home/admin/database.conf',
-    reason: 'Targeted because attacker showed database interest.',
-    content: `[database]\nhost = 10.0.1.50\nport = 3306\nuser = app_admin\npassword = {{HONEYTOKEN_CANARY_DB_PASS}}\ndbname = production_orders`,
-  });
-
-  const tabs = [
-    { id: 'files' as const, label: 'Filesystem Decoys', icon: Folder },
-    { id: 'credentials' as const, label: 'Honeytokens', icon: Key },
-    { id: 'services' as const, label: 'Services', icon: Server },
-    { id: 'network' as const, label: 'Topology', icon: Network },
-    { id: 'web' as const, label: 'Web Traps', icon: Globe },
-  ];
+  const [tab, setTab] = useState<TabId>('files');
+  const [fileName, setFileName] = useState('database.conf');
+  const file = files.find((f) => f.name === fileName) || files[1];
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Dynamic Deception" subtitle="Observe the synthetic environment presented to the adversary.">
-        <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400 font-mono">
-          <span className="w-2 h-2 rounded-full bg-amber-400" style={{ animation: 'pulse-glow 2s ease-in-out infinite' }} />
-          Trap Mode: Active
-        </div>
+      <PageHeader title="Deception lab" subtitle="The fake environment the attacker sees. Everything here is synthetic and carries a tracking beacon.">
+        <span className="flex items-center gap-2 text-[13px] text-graphite">
+          <ShieldCheck className="h-4 w-4 text-moss" />
+          No real credentials exposed
+        </span>
       </PageHeader>
-      <div className="p-3.5 rounded-xl bg-stone-200/70 border border-stone-300 flex items-center justify-between text-xs">
-        <div className="flex items-center gap-2.5 text-stone-600">
-          <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
-          <span>All items are synthetic decoys with canary honeytokens. No real credentials are exposed.</span>
-        </div>
+
+      <div className="flex gap-6 overflow-x-auto border-b border-rule" role="tablist">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            role="tab"
+            aria-selected={tab === t.id}
+            onClick={() => setTab(t.id)}
+            className={cn(
+              '-mb-px whitespace-nowrap border-b-[3px] pb-2.5 text-sm transition-colors',
+              tab === t.id ? 'border-lure font-semibold text-ink' : 'border-transparent text-graphite hover:text-ink'
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
-      <div className="flex items-center gap-2 border-b border-stone-300 pb-1 overflow-x-auto">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-t-lg transition-all border-b-2 whitespace-nowrap ${
-                isActive ? 'border-amber-500 text-amber-400 bg-amber-500/5' : 'border-transparent text-stone-600 hover:text-stone-700'
-              }`}>
-              <Icon className="w-3.5 h-3.5" /><span>{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
-      {activeTab === 'files' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-5 card-interactive p-5 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b-honey-border">
-              <span className="text-xs font-bold text-stone-800 uppercase tracking-wider">Synthetic Filesystem Tree</span>
-              <span className="text-[10px] text-amber-400 font-mono">Auto-seeded</span>
-            </div>
-            <div className="font-mono text-xs space-y-2">
-              {[
-                { name: 'backup.sh', icon: FileText, color: 'cyan', label: 'Script decoy' },
-                { name: 'database.conf', icon: Database, color: 'emerald', label: 'DB credential honeytrap' },
-                { name: 'passwords.txt', icon: Lock, color: 'purple', label: 'Credential harvest decoy' },
-                { name: 'employee_data.csv', icon: FileText, color: 'amber', label: 'PII canary trap' },
-              ].map((file) => (
-                <button key={file.name} onClick={() => setSelectedFile({ name: file.name, path: `/home/admin/${file.name}`, reason: file.label, content: `# ${file.name}\n# Decoy generated by Evolution Engine` })}
-                  className={`w-full text-left p-2 rounded flex items-center justify-between transition-colors ${selectedFile.name === file.name ? 'bg-stone-200 text-amber-400' : 'hover:bg-stone-200/50 text-stone-600'}`}>
-                  <span className="flex items-center gap-1.5 truncate"><file.icon className="w-3.5 h-3.5" />{file.name}</span>
-                  <span className="text-[10px] text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">Decoy</span>
-                </button>
+
+      {tab === 'files' && (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+          <Panel className="lg:col-span-4" title="/home/admin" note="Seeded automatically for this attacker" bodyClassName="px-3 pb-3 pt-3">
+            <ul className="space-y-0.5">
+              {files.map((f) => (
+                <li key={f.name}>
+                  <button
+                    onClick={() => setFileName(f.name)}
+                    aria-pressed={fileName === f.name}
+                    className={cn(
+                      'flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left font-mono text-[13px]',
+                      fileName === f.name ? 'bg-lure-soft text-ink' : 'text-graphite hover:bg-sunk hover:text-ink'
+                    )}
+                  >
+                    <f.icon className="h-4 w-4 shrink-0 text-pencil" />
+                    <span className="truncate">{f.name}</span>
+                  </button>
+                </li>
               ))}
-            </div>
-          </div>
-          <div className="lg:col-span-7 card-interactive p-5 flex flex-col space-y-4 font-mono">
-            <div className="pb-3 border-b-honey-border">
-              <span className="text-xs font-bold text-stone-800">{selectedFile.path}</span>
-              <div className="text-[11px] text-amber-400 mt-0.5">● {selectedFile.reason}</div>
-            </div>
-            <div className="mt-4 p-4 rounded-xl bg-stone-50 border border-stone-300/80 text-xs leading-relaxed text-stone-400 whitespace-pre-wrap overflow-x-auto">{selectedFile.content}</div>
-            <div className="pt-3 border-t-honey-border text-xs text-stone-600 flex items-center justify-between font-sans">
-              <span>Sensor Watermark: Attached</span>
-              <span className="text-amber-400 font-semibold flex items-center gap-1"><CheckCircle className="w-3.5 h-3.5" />Beacon will alert SOC</span>
-            </div>
-          </div>
+            </ul>
+          </Panel>
+          <Panel
+            className="lg:col-span-8"
+            title={<span className="font-mono">/home/admin/{file.name}</span>}
+            note={file.reason}
+            action={<span className="text-xs font-semibold text-moss">Beacon armed</span>}
+          >
+            <pre className="overflow-x-auto rounded-md border border-rule bg-sunk p-4 font-mono text-[13px] leading-relaxed text-ink">
+              {file.content.split(/(\{\{[A-Z_]+\}\})/).map((part, i) =>
+                part.startsWith('{{') ? <span key={i} className="mark">{part}</span> : part
+              )}
+            </pre>
+            <p className="mt-3 text-xs text-pencil">Highlighted values are canary tokens. Using one alerts the SOC and identifies the attacker.</p>
+          </Panel>
         </div>
       )}
-      {activeTab === 'credentials' && (
-        <div className="card-interactive p-6 space-y-4">
-          <h3 className="text-sm font-bold text-stone-800">Active Canary Honeytokens</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-            {[
-              { name: 'AWS_ACCESS_KEY_ID', value: 'AKIAIOSFODNN7EXAMPLE', color: 'emerald' },
-              { name: 'MYSQL_ROOT_HASH', value: '$6$salt$canary_hash_beacon', color: 'purple' },
-              { name: 'SSH_PRIVATE_KEY', value: 'id_rsa (Trap Beacon 4096)', color: 'amber' },
-            ].map((cred) => (
-              <div key={cred.name} className="p-4 rounded-xl bg-stone-200/60 border border-stone-300 space-y-2">
-                <div className="flex items-center justify-between"><span className="text-xs font-bold text-stone-800 font-mono">{cred.name}</span><span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">Canary Live</span></div>
-                <p className="font-mono text-xs text-blue-400 truncate">{cred.value}</p>
-                <p className="text-[11px] text-stone-600">Seeded with tracking beacon</p>
+
+      {tab === 'credentials' && (
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+          {[
+            { name: 'AWS_ACCESS_KEY_ID', value: 'AKIAIOSFODNN7EXAMPLE' },
+            { name: 'MYSQL_ROOT_HASH', value: '$6$salt$canary_hash_beacon' },
+            { name: 'SSH_PRIVATE_KEY', value: 'id_rsa, 4096-bit, beaconed' },
+          ].map((c) => (
+            <article key={c.name} className="sheet p-5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-mono text-[13px] font-semibold text-ink">{c.name}</span>
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-moss"><span className="live-dot" />Live</span>
               </div>
-            ))}
-          </div>
+              <p className="mt-3 truncate rounded bg-sunk px-2.5 py-1.5 font-mono text-xs text-graphite">{c.value}</p>
+            </article>
+          ))}
         </div>
       )}
-      {activeTab === 'services' && (
-        <div className="card-interactive p-6 space-y-4">
-          <h3 className="text-sm font-bold text-stone-800">Emulated Synthetic Daemon Ports</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-            {[
-              { port: 22, name: 'OpenSSH 8.9p1', interactions: 142 },
-              { port: 80, name: 'Apache httpd 2.4.52', interactions: 89 },
-              { port: 3306, name: 'MySQL Community 8.0.32', interactions: 48 },
-              { port: 6379, name: 'Redis Server 7.0.5', interactions: 26 },
-            ].map((svc) => (
-              <div key={svc.port} className="p-4 rounded-xl bg-stone-200/50 border border-stone-300">
-                <div className="flex items-center justify-between mb-1"><span className="text-sm font-bold text-amber-400 font-mono">Port {svc.port}</span><span className="text-[10px] text-amber-400 bg-amber-500/10 px-1.5 py-0.2 rounded border border-amber-500/20">Active</span></div>
-                <div className="text-xs text-stone-400 mt-1">{svc.name}</div>
-                <div className="text-[11px] text-stone-600 mt-2">Captured: {svc.interactions} probes</div>
-              </div>
-            ))}
-          </div>
+
+      {tab === 'services' && (
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+          {[
+            { port: 22, name: 'OpenSSH 8.9p1', hits: 142 },
+            { port: 80, name: 'Apache httpd 2.4.52', hits: 89 },
+            { port: 3306, name: 'MySQL Community 8.0.32', hits: 48 },
+            { port: 6379, name: 'Redis Server 7.0.5', hits: 26 },
+          ].map((s) => (
+            <article key={s.port} className="sheet p-5">
+              <p className="font-mono text-2xl font-semibold text-ink">:{s.port}</p>
+              <p className="mt-1 text-sm text-graphite">{s.name}</p>
+              <p className="mt-4 text-xs text-pencil"><span className="font-semibold text-ink">{s.hits}</span> probes captured</p>
+            </article>
+          ))}
         </div>
       )}
-      {activeTab === 'network' && (
-        <div className="card-interactive p-6 space-y-4">
-          <h3 className="text-sm font-bold text-stone-800">Virtual Honeynet Topology</h3>
-          <div className="p-4 rounded-xl bg-stone-200/40 border border-stone-300 font-mono text-xs space-y-2 text-stone-600">
-            <div className="text-blue-400 font-bold">10.0.1.0/24 — DMZ Honeytrap Subnet</div>
-            <div className="pl-4">├── 10.0.1.10 (SSH-HNY-01 — Linux Decoy)</div>
-            <div className="pl-4">└── 10.0.1.50 (DB-HNY-01 — Target Honeytrap)</div>
-            <div className="text-orange-400 font-bold pt-2">10.0.2.0/24 — Synthetic Enterprise (Airgapped)</div>
-          </div>
-        </div>
-      )}
-      {activeTab === 'web' && (
-        <div className="card-interactive p-6 space-y-4">
-          <h3 className="text-sm font-bold text-stone-800">Synthetic Web Decoy Portals</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            <div className="p-4 rounded-xl bg-stone-200/50 border border-stone-300 space-y-2">
-              <span className="text-xs font-bold text-blue-400 font-mono">/admin/portal (SSO Login Trap)</span>
-              <p className="text-xs text-stone-600">Logs username lists and password spraying attempts.</p>
-              <div className="text-[11px] text-amber-400">Captured: 400+ brute force payloads today</div>
+
+      {tab === 'network' && (
+        <Panel title="Fake network" note="What an attacker sees when they scan from inside a decoy">
+          <div className="space-y-5 font-mono text-[13px]">
+            <div>
+              <p className="font-semibold text-ink">10.0.1.0/24 <span className="font-sans font-normal text-pencil">DMZ decoy subnet</span></p>
+              <ul className="mt-2 space-y-1.5 border-l border-rule-strong pl-4 text-graphite">
+                <li>10.0.1.10 <Tag className="ml-2">SSH-HNY-01</Tag> <span className="font-sans text-pencil">Linux decoy</span></li>
+                <li>10.0.1.50 <Tag className="ml-2">DB-HNY-01</Tag> <span className="font-sans text-pencil">database decoy</span></li>
+              </ul>
             </div>
-            <div className="p-4 rounded-xl bg-stone-200/50 border border-stone-300 space-y-2">
-              <span className="text-xs font-bold text-orange-400 font-mono">/api/v1/customers/export (Data Trap)</span>
-              <p className="text-xs text-stone-600">Synthetically generated CSV with canary tokens.</p>
-              <div className="text-[11px] text-amber-400">Canary trigger rate: 100% telemetry fidelity</div>
-            </div>
+            <p className="font-semibold text-ink">10.0.2.0/24 <span className="font-sans font-normal text-pencil">synthetic enterprise, air-gapped</span></p>
           </div>
+        </Panel>
+      )}
+
+      {tab === 'web' && (
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          {[
+            { path: '/admin/portal', kind: 'SSO login trap', desc: 'Logs username lists and password-spraying attempts.', stat: '400+ brute-force payloads today' },
+            { path: '/api/v1/customers/export', kind: 'Data export trap', desc: 'Serves a generated CSV seeded with canary tokens.', stat: 'Every download reported' },
+          ].map((w) => (
+            <article key={w.path} className="sheet p-5">
+              <p className="font-mono text-[15px] font-semibold text-ink">{w.path}</p>
+              <p className="mt-0.5 text-xs text-pencil">{w.kind}</p>
+              <p className="mt-3 text-sm text-graphite">{w.desc}</p>
+              <p className="mt-4 border-t border-rule pt-3 text-xs font-semibold text-ink">{w.stat}</p>
+            </article>
+          ))}
         </div>
       )}
     </div>

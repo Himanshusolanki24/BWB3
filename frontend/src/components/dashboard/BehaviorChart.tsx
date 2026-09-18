@@ -1,169 +1,79 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts';
-import { Activity } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import type { BehaviorTimeSeriesPoint } from '@/types';
+import { Panel, ChartTooltip } from '@/components/ui';
+import { BEHAVIOR_SERIES, CHART, chartAxis } from '@/lib/utils';
 
-interface BehaviorChartProps {
-  initialData: BehaviorTimeSeriesPoint[];
-}
+const periods = ['6H', '12H', '24H'] as const;
+type Period = (typeof periods)[number];
+const sliceFor: Record<Period, number> = { '6H': -3, '12H': -6, '24H': 0 };
 
-const timePeriods = ['1H', '6H', '24H', '7D'] as const;
-type TimePeriod = (typeof timePeriods)[number];
+// ponytail: adaptation moment hard-coded to the 10:00 bucket; derive from adaptation events once the API returns real timestamps.
+const ADAPTED_AT = '10:00';
 
-const CustomTooltip = ({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean;
-  payload?: Array<{ name: string; value: number; color: string }>;
-  label?: string;
-}) => {
-  if (active && payload && payload.length)
-    return (
-      <div className="bg-white border border-stone-300 p-3 rounded-xl shadow-lg text-xs space-y-1.5 font-mono">
-        <p className="font-sans font-bold text-stone-900 border-b border-stone-200 pb-1">
-          Timeline: {label}
-        </p>
-        {payload.map((entry, index) => (
-          <div key={`entry-${index}`} className="flex items-center justify-between gap-4">
-            <span className="flex items-center gap-1.5 font-sans font-medium" style={{ color: entry.color }}>
-              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
-              {entry.name}:
-            </span>
-            <span className="font-bold text-stone-900 font-mono">{entry.value}</span>
-          </div>
-        ))}
-      </div>
-    );
-  return null;
-};
-
-export function BehaviorChart({ initialData }: BehaviorChartProps) {
-  const [activePeriod, setActivePeriod] = useState<TimePeriod>('24H');
-  const displayData = initialData.slice(
-    activePeriod === '1H' ? -3 : activePeriod === '6H' ? -6 : 0
-  );
+export function BehaviorChart({ initialData }: { initialData: BehaviorTimeSeriesPoint[] }) {
+  const [period, setPeriod] = useState<Period>('24H');
+  const data = initialData.slice(sliceFor[period]);
+  const total = data.reduce((sum, d) => sum + BEHAVIOR_SERIES.reduce((s, b) => s + d[b.key], 0), 0);
 
   return (
-    <div className="card-interactive p-5 flex flex-col h-full bg-white border border-stone-200 shadow-xs">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-stone-200">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-teal-50 border border-teal-200">
-            <Activity className="w-4 h-4 text-teal-700" />
-          </div>
-          <div>
-            <h3 className="text-sm font-bold text-stone-900 tracking-wide">
-              Attack Behavior Over Time
-            </h3>
-            <p className="text-xs text-stone-500 font-medium">
-              Multi-vector behavior volume & engagement patterns
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center p-0.5 rounded-lg bg-stone-100 border border-stone-300">
-          {timePeriods.map((period) => (
-            <button
-              key={period}
-              onClick={() => setActivePeriod(period)}
-              className={`px-3 py-1 text-xs rounded-md font-bold transition-all ${
-                activePeriod === period
-                  ? 'bg-amber-100 text-amber-900 border border-amber-300 shadow-xs'
-                  : 'text-stone-600 hover:text-stone-900'
-              }`}
-            >
-              {period}
+    <Panel
+      className="h-full"
+      title="Attacker activity"
+      note={`${total} actions captured across all decoys, grouped by what the attacker was trying to do`}
+      action={
+        <div className="seg" role="group" aria-label="Time range">
+          {periods.map((p) => (
+            <button key={p} aria-pressed={period === p} onClick={() => setPeriod(p)}>
+              {p}
             </button>
           ))}
         </div>
-      </div>
-      <div className="w-full h-72">
+      }
+    >
+      <ul className="mb-4 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-graphite">
+        {BEHAVIOR_SERIES.map((s) => (
+          <li key={s.key} className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-[3px]" style={{ background: s.color }} />
+            {s.name}
+          </li>
+        ))}
+        <li className="flex items-center gap-1.5">
+          <span className="h-3 w-0.5 bg-lure" />
+          Decoy adapted
+        </li>
+      </ul>
+      <div className="graph-paper h-72 rounded-md">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={displayData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <defs>
-              <linearGradient id="colorRecon" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#D97706" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="#D97706" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="colorCred" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#0D9488" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="#0D9488" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="colorExploit" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#EA580C" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="#EA580C" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="colorPayload" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#DC2626" stopOpacity={0.35} />
-                <stop offset="95%" stopColor="#DC2626" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E7E0D8" vertical={false} />
-            <XAxis
-              dataKey="time"
-              stroke="#78716C"
-              fontSize={11}
-              tickLine={false}
-              axisLine={{ stroke: '#D6CDC4' }}
-            />
-            <YAxis stroke="#78716C" fontSize={11} tickLine={false} axisLine={false} />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend
-              verticalAlign="top"
-              align="right"
-              iconType="circle"
-              wrapperStyle={{ paddingBottom: '12px', fontSize: '11px', fontWeight: 600 }}
-            />
-            <Area
-              type="monotone"
-              dataKey="reconnaissance"
-              name="Reconnaissance"
-              stroke="#D97706"
-              fillOpacity={1}
-              fill="url(#colorRecon)"
-              strokeWidth={2}
-            />
-            <Area
-              type="monotone"
-              dataKey="credentialAccess"
-              name="Credential Access"
-              stroke="#0D9488"
-              fillOpacity={1}
-              fill="url(#colorCred)"
-              strokeWidth={2}
-            />
-            <Area
-              type="monotone"
-              dataKey="exploitation"
-              name="Exploitation"
-              stroke="#EA580C"
-              fillOpacity={1}
-              fill="url(#colorExploit)"
-              strokeWidth={2}
-            />
-            <Area
-              type="monotone"
-              dataKey="payloadDelivery"
-              name="Payload Delivery"
-              stroke="#DC2626"
-              fillOpacity={1}
-              fill="url(#colorPayload)"
-              strokeWidth={2}
-            />
-          </AreaChart>
+          <BarChart data={data} margin={{ top: 16, right: 8, left: -18, bottom: 0 }} barCategoryGap="22%">
+            <CartesianGrid stroke={CHART.rule} vertical={false} />
+            <XAxis dataKey="time" {...chartAxis} axisLine={{ stroke: CHART.pencil }} />
+            <YAxis {...chartAxis} axisLine={false} />
+            <Tooltip content={<ChartTooltip />} cursor={{ fill: 'rgba(23,32,72,0.05)' }} />
+            {data.some((d) => d.time === ADAPTED_AT) && (
+              <ReferenceLine
+                x={ADAPTED_AT}
+                stroke={CHART.lure}
+                strokeWidth={3}
+                label={{ value: 'Decoy adapted', position: 'top', fill: CHART.ink, fontSize: 11, fontWeight: 600 }}
+              />
+            )}
+            {BEHAVIOR_SERIES.map((s, i) => (
+              <Bar
+                key={s.key}
+                isAnimationActive={false}
+                dataKey={s.key}
+                name={s.name}
+                stackId="a"
+                fill={s.color}
+                radius={i === BEHAVIOR_SERIES.length - 1 ? [3, 3, 0, 0] : 0}
+              />
+            ))}
+          </BarChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </Panel>
   );
 }

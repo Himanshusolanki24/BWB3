@@ -1,55 +1,48 @@
 'use client';
 
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Brain } from 'lucide-react';
-import type { BehaviorProfile } from '@/types';
+import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import type { BehaviorProfile, BehaviorType } from '@/types';
+import { Panel, ChartTooltip } from '@/components/ui';
+import { CHART } from '@/lib/utils';
 
-interface BehaviorRadarProps {
-  behaviors: BehaviorProfile[];
-}
+// Fixed axes so every attacker's shape is comparable at a glance.
+const AXES: BehaviorType[] = [
+  'Reconnaissance', 'Brute Force', 'Credential Access', 'Exploitation', 'Privilege Escalation',
+  'Persistence', 'Lateral Movement', 'Payload Delivery', 'Data Exfiltration',
+];
 
-export function BehaviorRadar({ behaviors }: BehaviorRadarProps) {
-  const getColor = (conf: number) => {
-    if (conf >= 75) return 'from-amber-500 to-amber-400';
-    if (conf >= 50) return 'from-blue-500 to-blue-400';
-    if (conf >= 25) return 'from-orange-500 to-orange-400';
-    return 'from-amber-500 to-amber-400';
-  };
+export function BehaviorRadar({ behaviors }: { behaviors: BehaviorProfile[] }) {
+  const data = AXES.map((axis) => ({
+    axis,
+    confidence: behaviors.find((b) => b.type === axis)?.confidence ?? 0,
+  }));
+  const top = [...behaviors].sort((a, b) => b.confidence - a.confidence)[0];
 
   return (
-    <div className="card-interactive p-5 space-y-4">
-      <div className="flex items-center justify-between pb-3 border-b border-stone-300">
-        <div className="flex items-center gap-3">
-          <Brain className="w-4 h-4 text-amber-400" />
-          <h3 className="text-sm font-semibold text-stone-800">Behavior Classification Profile</h3>
-        </div>
-        <span className="text-[11px] text-stone-600">ML Confidence Score</span>
+    <Panel
+      title="Behavior fingerprint"
+      note={top ? `Most likely after ${top.type.toLowerCase()} (${top.confidence}% confidence)` : 'No behavior classified yet'}
+    >
+      <div className="h-80">
+        <ResponsiveContainer width="100%" height="100%">
+          <RadarChart data={data} outerRadius="72%">
+            <PolarGrid stroke={CHART.rule} />
+            <PolarAngleAxis dataKey="axis" tick={{ fill: CHART.graphite, fontSize: 11 }} />
+            <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
+            <Tooltip content={<ChartTooltip unit="%" />} />
+            <Radar
+              isAnimationActive={false}
+              name="Confidence"
+              dataKey="confidence"
+              stroke={CHART.ink}
+              strokeWidth={1.75}
+              fill={CHART.lure}
+              fillOpacity={0.55}
+              dot={{ r: 2.5, fill: CHART.ink, strokeWidth: 0 }}
+            />
+          </RadarChart>
+        </ResponsiveContainer>
       </div>
-      <div className="space-y-3.5">
-        {behaviors.map((b, index) => (
-          <div key={b.type} className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-medium text-stone-400 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />{b.type}
-              </span>
-              <span className="font-mono font-bold text-amber-400">{b.confidence}%</span>
-            </div>
-            <div className="h-2 w-full bg-stone-200 rounded-full overflow-hidden border border-stone-300/50">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${b.confidence}%` }}
-                transition={{ duration: 0.8, delay: index * 0.1, ease: 'easeOut' }}
-                className={`h-full rounded-full bg-gradient-to-r ${getColor(b.confidence)}`}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="pt-2 text-[11px] text-stone-600 flex items-center justify-between border-t-honey-border/50">
-        <span>Model: Behavioral Heuristics v2.4</span>
-        <span className="text-blue-400">Multi-stage Intent</span>
-      </div>
-    </div>
+    </Panel>
   );
 }

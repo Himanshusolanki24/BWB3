@@ -1,81 +1,122 @@
 'use client';
 
 import { useState } from 'react';
+import { Search } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { Panel, RiskBadge, Tag, ChartTooltip } from '@/components/ui';
 import { threatTechniques, threatIndicators } from '@/data/intelligence';
-import { getRiskBgColor } from '@/lib/utils';
+import { CHART, RISK_HEX, chartAxis } from '@/lib/utils';
+
+const tactics = ['ALL', 'Reconnaissance', 'Credential Access', 'Execution', 'Persistence', 'Lateral Movement'];
 
 export default function ThreatIntelligencePage() {
-  const [activeTab, setActiveTab] = useState<'matrix' | 'indicators'>('matrix');
-  const [selectedTactic, setSelectedTactic] = useState('ALL');
+  const [tab, setTab] = useState<'matrix' | 'indicators'>('matrix');
+  const [tactic, setTactic] = useState('ALL');
   const [iocSearch, setIocSearch] = useState('');
 
-  const tactics = ['ALL', 'Reconnaissance', 'Credential Access', 'Execution', 'Persistence', 'Lateral Movement'];
-  const filteredTechniques = threatTechniques.filter((t) => selectedTactic === 'ALL' || t.tactic === selectedTactic);
-  const filteredIOCs = threatIndicators.filter((ioc) => ioc.value.toLowerCase().includes(iocSearch.toLowerCase()) || ioc.type.toLowerCase().includes(iocSearch.toLowerCase()));
+  const techniques = threatTechniques.filter((t) => tactic === 'ALL' || t.tactic === tactic);
+  const ranked = [...techniques].sort((a, b) => b.frequency - a.frequency);
+  const q = iocSearch.toLowerCase();
+  const iocs = threatIndicators.filter((i) => i.value.toLowerCase().includes(q) || i.type.toLowerCase().includes(q));
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Threat Intelligence" subtitle="Adversary techniques mapped to MITRE ATT&CK with actionable indicators.">
-        <div className="flex items-center gap-1 p-1 bg-stone-200 rounded-lg border border-stone-300 text-xs">
-          <button onClick={() => setActiveTab('matrix')} className={`px-3 py-1.5 rounded-md font-semibold transition-colors ${activeTab === 'matrix' ? 'bg-amber-500 text-stone-50' : 'text-stone-600 hover:text-stone-700'}`}>MITRE ATT&CK</button>
-          <button onClick={() => setActiveTab('indicators')} className={`px-3 py-1.5 rounded-md font-semibold transition-colors ${activeTab === 'indicators' ? 'bg-amber-500 text-stone-50' : 'text-stone-600 hover:text-stone-700'}`}>IOCs</button>
+      <PageHeader title="Intelligence" subtitle="Techniques seen in your decoys, mapped to MITRE ATT&CK, and the indicators you can block today.">
+        <div className="seg" role="tablist">
+          <button role="tab" aria-selected={tab === 'matrix'} onClick={() => setTab('matrix')}>Techniques</button>
+          <button role="tab" aria-selected={tab === 'indicators'} onClick={() => setTab('indicators')}>Indicators</button>
         </div>
       </PageHeader>
-      {activeTab === 'matrix' && (
-        <div className="space-y-6">
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            <span className="text-xs text-stone-600 font-medium">Tactic:</span>
-            {tactics.map((tac) => (
-              <button key={tac} onClick={() => setSelectedTactic(tac)} className={`px-3 py-1 text-xs rounded-lg transition-colors whitespace-nowrap ${selectedTactic === tac ? 'bg-blue-500/20 text-blue-400 font-semibold border border-blue-500/30' : 'text-stone-600 hover:text-stone-700'}`}>{tac}</button>
+
+      {tab === 'matrix' && (
+        <>
+          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by tactic">
+            {tactics.map((t) => (
+              <button
+                key={t}
+                onClick={() => setTactic(t)}
+                aria-pressed={tactic === t}
+                className={
+                  tactic === t
+                    ? 'rounded-full border border-ink bg-ink px-3 py-1 text-[13px] font-semibold text-white'
+                    : 'rounded-full border border-rule-strong bg-sheet px-3 py-1 text-[13px] text-graphite hover:border-ink hover:text-ink'
+                }
+              >
+                {t === 'ALL' ? 'All tactics' : t}
+              </button>
             ))}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {filteredTechniques.map((tech) => (
-              <div key={tech.id} className="card-interactive p-4 flex flex-col justify-between space-y-3">
-                <div>
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-stone-200 border border-stone-300 text-blue-400">{tech.mitreId}</span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${getRiskBgColor(tech.severity)}`}>{tech.severity}</span>
-                  </div>
-                  <h4 className="text-sm font-bold text-stone-800">{tech.name}</h4>
-                  <div className="text-[11px] text-amber-400 font-medium mt-0.5">Tactic: {tech.tactic}</div>
-                  <p className="text-xs text-stone-600 mt-2 line-clamp-2">{tech.description}</p>
-                </div>
-                <div className="pt-3 border-t-honey-border text-[11px] space-y-1.5 text-stone-600">
-                  <div className="flex items-center justify-between"><span>Occurrences:</span><span className="font-mono font-bold text-stone-800">{tech.frequency} times</span></div>
-                  <div className="flex items-center justify-between"><span>Adversaries:</span><span className="font-mono text-blue-400">{tech.attackers.join(', ')}</span></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-      {activeTab === 'indicators' && (
-        <div className="card-interactive p-5 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b-honey-border">
-            <div><h3 className="text-sm font-bold text-stone-800">IOC Registry ({threatIndicators.length} artifacts)</h3><p className="text-xs text-stone-600">IP addresses, payloads, domains from honeypot traps</p></div>
-            <div className="relative w-full sm:w-72">
-              <input type="text" placeholder="Search indicator..." value={iocSearch} onChange={(e) => setIocSearch(e.target.value)} className="w-full pl-8 pr-3 py-1.5 bg-stone-200 border border-stone-300 rounded-lg text-xs text-stone-800 placeholder:text-stone-600 focus:outline-none focus:border-amber-500" />
+
+          <Panel title="How often each technique was used" note="Bar color shows severity">
+            <div style={{ height: Math.max(ranked.length * 34, 80) }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={ranked} layout="vertical" margin={{ top: 0, right: 24, left: 0, bottom: 0 }} barSize={16}>
+                  <XAxis type="number" {...chartAxis} axisLine={false} hide />
+                  <YAxis type="category" dataKey="name" width={220} {...chartAxis} axisLine={false} tick={{ fill: CHART.ink, fontSize: 12, fontFamily: 'var(--font-schibsted)' }} />
+                  <Tooltip content={<ChartTooltip unit=" times" />} cursor={{ fill: 'rgba(23,32,72,0.05)' }} />
+                  <Bar isAnimationActive={false} dataKey="frequency" name="Observed" radius={[0, 3, 3, 0]} label={{ position: 'right', fill: CHART.graphite, fontSize: 11 }}>
+                    {ranked.map((t) => <Cell key={t.id} fill={RISK_HEX[t.severity]} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
+          </Panel>
+
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+            {techniques.map((t) => (
+              <article key={t.id} className="sheet flex flex-col p-5">
+                <div className="flex items-center justify-between gap-2">
+                  <Tag className="text-ink">{t.mitreId}</Tag>
+                  <RiskBadge risk={t.severity} />
+                </div>
+                <h3 className="mt-3 text-[15px] font-semibold leading-snug text-ink">{t.name}</h3>
+                <p className="mt-0.5 text-xs text-pencil">{t.tactic}</p>
+                <p className="mt-2 line-clamp-3 flex-1 text-[13px] text-graphite">{t.description}</p>
+                <div className="mt-4 flex items-center justify-between border-t border-rule pt-3 text-xs">
+                  <span className="text-pencil">{t.frequency} times</span>
+                  <span className="font-mono text-ink">{t.attackers.join(', ')}</span>
+                </div>
+              </article>
+            ))}
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead><tr className="border-b border-stone-300 text-stone-600 uppercase text-[10px] font-mono"><th className="pb-2.5">Type</th><th className="pb-2.5">Value</th><th className="pb-2.5">Severity</th><th className="pb-2.5">Actor</th><th className="pb-2.5">First Seen</th></tr></thead>
-              <tbody className="divide-y border-stone-300/50">
-                {filteredIOCs.map((ioc) => (
-                  <tr key={ioc.id} className="table-row-hover">
-                    <td className="py-3 pr-4 whitespace-nowrap"><span className="px-2 py-0.5 rounded bg-stone-200 border border-stone-300 text-blue-400 text-[11px] font-bold">{ioc.type}</span></td>
-                    <td className="py-3 pr-4 font-bold text-stone-800 whitespace-nowrap max-w-xs truncate font-mono">{ioc.value}</td>
-                    <td className="py-3 pr-4 whitespace-nowrap"><span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${getRiskBgColor(ioc.severity)}`}>{ioc.severity}</span></td>
-                    <td className="py-3 pr-4 text-amber-400 whitespace-nowrap">{ioc.relatedAttackers.join(', ')}</td>
-                    <td className="py-3 pr-4 text-stone-600 whitespace-nowrap">{ioc.firstSeen}</td>
+        </>
+      )}
+
+      {tab === 'indicators' && (
+        <Panel
+          title="Indicators of compromise"
+          note={`${iocs.length} of ${threatIndicators.length} indicators`}
+          action={
+            <label className="relative block w-full sm:w-72">
+              <span className="sr-only">Search indicators</span>
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-pencil" />
+              <input className="field pl-8" placeholder="IP, hash, domain" value={iocSearch} onChange={(e) => setIocSearch(e.target.value)} />
+            </label>
+          }
+        >
+          <div className="-mx-5 overflow-x-auto px-5">
+            <table className="data-table min-w-[720px]">
+              <thead>
+                <tr><th>Type</th><th>Value</th><th>Severity</th><th>Seen with</th><th>First seen</th></tr>
+              </thead>
+              <tbody>
+                {iocs.map((i) => (
+                  <tr key={i.id}>
+                    <td><Tag>{i.type}</Tag></td>
+                    <td className="max-w-xs truncate font-mono text-xs font-medium text-ink" title={i.value}>{i.value}</td>
+                    <td><RiskBadge risk={i.severity} /></td>
+                    <td className="font-mono text-xs text-graphite">{i.relatedAttackers.join(', ')}</td>
+                    <td className="whitespace-nowrap text-xs text-pencil">{i.firstSeen}</td>
                   </tr>
                 ))}
+                {iocs.length === 0 && (
+                  <tr><td colSpan={5} className="py-8 text-center text-sm text-pencil">No indicators match that search.</td></tr>
+                )}
               </tbody>
             </table>
           </div>
-        </div>
+        </Panel>
       )}
     </div>
   );

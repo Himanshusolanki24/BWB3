@@ -112,9 +112,9 @@ export const behaviorTimeSeries: BehaviorTimeSeriesPoint[] = [
 ];
 
 export const behaviorDistribution: BehaviorDistribution[] = [
-  { name: 'Reconnaissance', value: 45, color: '#10b981' },
-  { name: 'Brute Force', value: 20, color: '#06b6d4' },
-  { name: 'Exploitation', value: 15, color: '#a855f7' },
-  { name: 'Persistence', value: 10, color: '#f59e0b' },
-  { name: 'Other', value: 10, color: '#6b7280' },
+  { name: 'Reconnaissance', value: 45, color: '#A7B7F2' },
+  { name: 'Brute Force', value: 20, color: '#2E55E6' },
+  { name: 'Exploitation', value: 15, color: '#172048' },
+  { name: 'Persistence', value: 10, color: '#C8620A' },
+  { name: 'Other', value: 10, color: '#BDC5D3' },
 ];

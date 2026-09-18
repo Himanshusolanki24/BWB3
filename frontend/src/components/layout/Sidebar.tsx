@@ -1,165 +1,121 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
-  LayoutDashboard,
-  Radio,
-  Server,
-  UserSearch,
-  Brain,
-  Dna,
-  Eye,
-  FileBarChart,
-  Settings,
-  ChevronLeft,
-  ChevronRight,
-  Shield,
-  Activity,
+  LayoutDashboard, Radio, Server, UserSearch, Brain, Dna, FlaskConical, FileBarChart, Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const navItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/live-attacks', label: 'Live Attacks', icon: Radio },
-  { href: '/honeypots', label: 'Honeypots', icon: Server },
-  { href: '/attackers', label: 'Attackers', icon: UserSearch },
-  { href: '/intelligence', label: 'Intelligence', icon: Brain },
-  { href: '/evolution', label: 'Evolution', icon: Dna },
-  { href: '/deception-lab', label: 'Deception Lab', icon: Eye },
-  { href: '/reports', label: 'Reports', icon: FileBarChart },
-  { href: '/settings', label: 'Settings', icon: Settings },
+const groups = [
+  {
+    label: 'Watch',
+    items: [
+      { href: '/', label: 'Overview', icon: LayoutDashboard },
+      { href: '/live-attacks', label: 'Live attacks', icon: Radio },
+      { href: '/attackers', label: 'Attackers', icon: UserSearch },
+      { href: '/intelligence', label: 'Intelligence', icon: Brain },
+    ],
+  },
+  {
+    label: 'Deceive',
+    items: [
+      { href: '/honeypots', label: 'Honeypots', icon: Server },
+      { href: '/evolution', label: 'Evolution', icon: Dna },
+      { href: '/deception-lab', label: 'Deception lab', icon: FlaskConical },
+    ],
+  },
+  {
+    label: 'Admin',
+    items: [
+      { href: '/reports', label: 'Reports', icon: FileBarChart },
+      { href: '/settings', label: 'Settings', icon: Settings },
+    ],
+  },
 ];
+
+const mobileItems = groups.flatMap((g) => g.items).slice(0, 5);
+
+export function Logo() {
+  return (
+    <Link href="/" className="flex items-center gap-2.5" aria-label="Honeypot home">
+      <svg width="26" height="28" viewBox="0 0 26 28" aria-hidden>
+        <path d="M13 1.5 24 7.75v12.5L13 26.5 2 20.25V7.75Z" fill="#F6C90E" stroke="#172048" strokeWidth="1.6" strokeLinejoin="round" />
+        <path d="M13 8.5 19 12v6l-6 3.5L7 18v-6Z" fill="none" stroke="#172048" strokeWidth="1.4" strokeLinejoin="round" />
+        <circle cx="13" cy="15" r="1.7" fill="#172048" />
+      </svg>
+      <span className="text-[17px] font-bold tracking-[-0.02em] text-ink">Honeypot</span>
+    </Link>
+  );
+}
 
 export function Sidebar() {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
 
   return (
     <>
-      <motion.aside
-        initial={false}
-        animate={{ width: collapsed ? 72 : 260 }}
-        transition={{ duration: 0.25, ease: 'easeInOut' }}
-        className="hidden lg:flex flex-col fixed left-0 top-0 h-screen bg-stone-50 border-r border-stone-200 z-40"
-        role="navigation"
+      <aside
+        className="fixed inset-y-0 left-0 z-40 hidden w-[232px] flex-col border-r border-rule bg-sheet lg:flex"
         aria-label="Main navigation"
       >
-        {/* Logo */}
-        <div className="flex items-center gap-3 px-4 h-16 border-b border-stone-200 shrink-0">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-600 to-teal-600 flex items-center justify-center shrink-0 shadow-xs">
-            <Shield className="w-4 h-4 text-white" />
-          </div>
-          <AnimatePresence>
-            {!collapsed && (
-              <motion.div
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 'auto' }}
-                exit={{ opacity: 0, width: 0 }}
-                transition={{ duration: 0.15 }}
-                className="overflow-hidden"
-              >
-                <span className="font-black text-sm tracking-widest text-stone-900">
-                  Honeypot
-                </span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+        <div className="flex h-16 items-center px-5">
+          <Logo />
         </div>
 
-        {/* Nav links */}
-        <nav className="flex-1 py-3 px-2 space-y-1 overflow-y-auto" aria-label="Main">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href;
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 focus-ring relative',
-                  isActive
-                    ? 'bg-amber-100/90 text-amber-950 border border-amber-300 shadow-xs'
-                    : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100 border border-transparent'
-                )}
-                title={collapsed ? item.label : undefined}
-                aria-current={isActive ? 'page' : undefined}
-              >
-                <Icon className={cn('w-[18px] h-[18px] shrink-0', isActive ? 'text-amber-700' : 'text-stone-500')} />
-                <AnimatePresence>
-                  {!collapsed && (
-                    <motion.span
-                      initial={{ opacity: 0, width: 0 }}
-                      animate={{ opacity: 1, width: 'auto' }}
-                      exit={{ opacity: 0, width: 0 }}
-                      transition={{ duration: 0.15 }}
-                      className="whitespace-nowrap overflow-hidden font-bold"
-                    >
-                      {item.label}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-                {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-amber-600 rounded-r" />
-                )}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-4">
+          {groups.map((group) => (
+            <div key={group.label}>
+              <p className="mb-1.5 px-2.5 text-xs font-medium text-pencil">{group.label}</p>
+              <ul className="space-y-px">
+                {group.items.map((item) => {
+                  const isActive = pathname === item.href;
+                  const Icon = item.icon;
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        aria-current={isActive ? 'page' : undefined}
+                        className={cn(
+                          'flex items-center gap-3 rounded-md px-2.5 py-2 text-sm transition-colors',
+                          isActive ? 'font-semibold text-ink' : 'text-graphite hover:bg-sunk hover:text-ink'
+                        )}
+                      >
+                        <Icon className={cn('h-[17px] w-[17px] shrink-0', isActive ? 'text-ink' : 'text-pencil')} strokeWidth={isActive ? 2.2 : 1.8} />
+                        <span className={cn(isActive && 'mark')}>{item.label}</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
         </nav>
 
-        {/* System Health */}
-        <div className="px-3 py-3 border-t border-stone-200 shrink-0">
-          <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-emerald-600 shrink-0 animate-pulse" />
-            <AnimatePresence>
-              {!collapsed && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="overflow-hidden"
-                >
-                  <p className="text-[11px] text-stone-500 font-medium">System Health</p>
-                  <p className="text-xs text-emerald-700 font-bold">Operational</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+        <div className="m-3 rounded-lg border border-rule bg-sunk px-3 py-2.5">
+          <p className="flex items-center gap-2 text-[13px] font-semibold text-ink">
+            <span className="live-dot text-moss" />
+            All sensors reporting
+          </p>
+          <p className="mt-0.5 pl-[15px] text-xs text-pencil">4 of 6 nodes active</p>
         </div>
+      </aside>
 
-        {/* Collapse toggle */}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-white border border-stone-300 flex items-center justify-center text-stone-500 hover:text-stone-900 transition-colors shadow-xs focus-ring"
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {collapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
-        </button>
-      </motion.aside>
-
-      {/* Mobile Nav */}
       <nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-stone-200 z-50 flex items-center justify-around px-2 py-2"
-        role="navigation"
+        className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-around border-t border-rule bg-sheet/95 px-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur lg:hidden"
         aria-label="Mobile navigation"
       >
-        {navItems.slice(0, 5).map((item) => {
+        {mobileItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={cn(
-                'flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg text-xs transition-colors focus-ring',
-                isActive ? 'text-amber-800 font-bold' : 'text-stone-500'
-              )}
               aria-current={isActive ? 'page' : undefined}
+              className={cn('flex flex-col items-center gap-1 px-2 py-1 text-[11px]', isActive ? 'font-semibold text-ink' : 'text-pencil')}
             >
-              <Icon className="w-5 h-5" />
-              <span className="text-[10px]">{item.label.split(' ')[0]}</span>
+              <Icon className="h-5 w-5" strokeWidth={isActive ? 2.2 : 1.8} />
+              <span className={cn(isActive && 'mark')}>{item.label.split(' ')[0]}</span>
             </Link>
           );
         })}

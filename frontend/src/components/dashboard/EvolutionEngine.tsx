@@ -1,243 +1,95 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Zap } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
 import type { EvolutionStage } from '@/types';
+import { Panel, Meter } from '@/components/ui';
+import { cn } from '@/lib/utils';
 
 const stages: { id: EvolutionStage; label: string; description: string }[] = [
-  { id: 'OBSERVE', label: 'OBSERVE', description: 'Collect attacker actions' },
-  { id: 'ANALYZE', label: 'ANALYZE', description: 'Identify behavior and intent' },
-  { id: 'ADAPT', label: 'ADAPT', description: 'Select deception strategy' },
-  { id: 'DECEIVE', label: 'DECEIVE', description: 'Deploy new decoys' },
-  { id: 'LEARN', label: 'LEARN', description: 'Measure attacker response' },
-  { id: 'EVOLVE', label: 'EVOLVE', description: 'Improve future strategies' },
+  { id: 'OBSERVE', label: 'Observe', description: 'Record every command and request the attacker sends.' },
+  { id: 'ANALYZE', label: 'Analyze', description: 'Work out what the attacker is after from their sequence of actions.' },
+  { id: 'ADAPT', label: 'Adapt', description: 'Pick the deception most likely to keep them engaged.' },
+  { id: 'DECEIVE', label: 'Deceive', description: 'Generate and plant new decoy files, credentials and services.' },
+  { id: 'LEARN', label: 'Learn', description: 'Measure whether the attacker took the bait, and for how long.' },
+  { id: 'EVOLVE', label: 'Evolve', description: 'Feed the result back so the next choice is better.' },
 ];
 
 export function EvolutionEngine() {
-  const [activeStage, setActiveStage] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-
-  const advance = useCallback(() => {
-    if (!isPaused) {
-      setActiveStage((prev) => (prev + 1) % stages.length);
-    }
-  }, [isPaused]);
+  const [active, setActive] = useState(2);
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
-    const interval = setInterval(advance, 3000);
-    return () => clearInterval(interval);
-  }, [advance]);
+    if (paused) return;
+    const t = setInterval(() => setActive((i) => (i + 1) % stages.length), 3200);
+    return () => clearInterval(t);
+  }, [paused]);
 
-  const currentStage = stages[activeStage];
-  const radius = 120;
-  const centerX = 160;
-  const centerY = 160;
+  const stage = stages[active];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3 }}
-      className="card-interactive p-6"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
+    <Panel
+      className="h-full"
+      title="Deception loop"
+      note="Cycle 47, running for 2h 14m"
+      action={<Link href="/evolution" className="btn">View engine</Link>}
     >
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-base font-bold text-stone-900">Self-Evolving Deception Engine</h2>
-          <p className="text-xs font-medium text-stone-500 mt-0.5">Autonomous adaptive response cycle</p>
-        </div>
-        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 border border-amber-300">
-          <div className="w-2 h-2 rounded-full bg-amber-600 animate-pulse" />
-          <span className="text-[11px] font-bold text-amber-800">LIVE CYCLE</span>
-        </div>
-      </div>
-
-      <div className="flex flex-col lg:flex-row items-center gap-8">
-        {/* Circular visualization with clean outer ring and no internal chords/dotted lines */}
-        <div className="relative shrink-0">
-          <svg width="320" height="320" viewBox="0 0 320 320" className="drop-shadow-sm">
-            {/* Background circular track */}
-            <circle
-              cx={centerX}
-              cy={centerY}
-              r={radius}
-              fill="none"
-              stroke="#E7E0D8"
-              strokeWidth="2.5"
-            />
-
-            {/* Active animated progress arc along the circle */}
-            <circle
-              cx={centerX}
-              cy={centerY}
-              r={radius}
-              fill="none"
-              stroke="url(#evolutionGradient)"
-              strokeWidth="3.5"
-              strokeDasharray={`${(2 * Math.PI * radius) / 6} ${(2 * Math.PI * radius * 5) / 6}`}
-              strokeDashoffset={-(2 * Math.PI * radius * activeStage) / 6 + (2 * Math.PI * radius) / 4}
-              strokeLinecap="round"
-              style={{ transition: 'stroke-dashoffset 0.6s ease' }}
-            />
-
-            <defs>
-              <linearGradient id="evolutionGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#D97706" />
-                <stop offset="100%" stopColor="#0D9488" />
-              </linearGradient>
-            </defs>
-
-            {/* Stage nodes with high contrast colors */}
-            {stages.map((stage, i) => {
-              const angle = (i * 360) / stages.length - 90;
-              const rad = (angle * Math.PI) / 180;
-              const x = centerX + radius * Math.cos(rad);
-              const y = centerY + radius * Math.sin(rad);
-              const isActive = i === activeStage;
-              const isPast = i < activeStage;
-
-              return (
-                <g key={stage.id} className="cursor-pointer" onClick={() => setActiveStage(i)}>
-                  {/* Outer pulse ring for active node */}
-                  {isActive && (
-                    <circle
-                      cx={x}
-                      cy={y}
-                      r={28}
-                      fill="none"
-                      stroke="rgba(217, 119, 6, 0.3)"
-                      strokeWidth="1.5"
-                      className="animate-ping"
-                    />
-                  )}
-
-                  {/* Node circle */}
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r={isActive ? 24 : 19}
-                    fill={isActive ? '#FEF3C7' : isPast ? '#F5F0EB' : '#FFFFFF'}
-                    stroke={isActive ? '#D97706' : isPast ? '#B45309' : '#D6CDC4'}
-                    strokeWidth={isActive ? 2.5 : 1.5}
-                    style={{ transition: 'all 0.3s ease' }}
-                  />
-
-                  {/* Node label */}
-                  <text
-                    x={x}
-                    y={y}
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                    fontSize={isActive ? 9.5 : 8.5}
-                    fontWeight={isActive ? 800 : 600}
-                    fill={isActive ? '#92400E' : isPast ? '#78350F' : '#44403C'}
-                    fontFamily="Inter, sans-serif"
-                    letterSpacing="0.04em"
-                    style={{ transition: 'fill 0.3s ease' }}
-                  >
-                    {stage.label}
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
-
-          {/* Center text in the circle with rich high-contrast colors */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentStage.id}
-                initial={{ opacity: 0, scale: 0.92 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.92 }}
-                transition={{ duration: 0.2 }}
-                className="text-center px-4"
-              >
-                <p className="text-xl font-black text-amber-600 tracking-wider">
-                  {currentStage.label}
-                </p>
-                <p className="text-xs font-semibold text-stone-600 mt-1 max-w-[130px] leading-snug">
-                  {currentStage.description}
-                </p>
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </div>
-
-        {/* Right side info panel with high-contrast text */}
-        <div className="flex-1 space-y-4 w-full">
-          <div className="p-4 rounded-xl bg-stone-100 border border-stone-200/80">
-            <p className="text-[11px] font-bold text-stone-500 uppercase tracking-wider mb-1">
-              Current Strategy
-            </p>
-            <p className="text-sm font-bold text-stone-900">
-              Database-Focused Deception
-            </p>
-          </div>
-
-          <div className="p-4 rounded-xl bg-stone-100 border border-stone-200/80">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">
-                Confidence
-              </p>
-              <p className="text-sm font-black text-amber-700 font-mono">
-                94%
-              </p>
-            </div>
-            <div className="w-full h-2 rounded-full bg-stone-200 overflow-hidden border border-stone-300/40">
-              <motion.div
-                className="h-full rounded-full bg-gradient-to-r from-amber-500 to-teal-600"
-                initial={{ width: 0 }}
-                animate={{ width: '94%' }}
-                transition={{ delay: 0.5, duration: 0.8, ease: 'easeOut' }}
-              />
-            </div>
-          </div>
-
-          {/* Adaptation notification card */}
+      <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={() => setPaused(false)}>
+        <div className="relative">
+          <div className="absolute left-[8.33%] right-[8.33%] top-[15px] hidden h-px bg-rule-strong sm:block" aria-hidden />
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.8 }}
-            className="p-4 rounded-xl border border-amber-300 bg-amber-50/80 shadow-xs"
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <Zap className="w-4 h-4 text-amber-700" />
-              <p className="text-xs font-extrabold text-amber-800 tracking-wide uppercase">
-                ADAPTATION DETECTED
-              </p>
-            </div>
-            <div className="space-y-1.5 text-xs">
-              <div className="flex justify-between">
-                <span className="text-stone-600 font-medium">Behavior</span>
-                <span className="text-stone-900 font-bold">Database Recon</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-stone-600 font-medium">Previous</span>
-                <span className="text-stone-400 line-through">Generic Files</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-stone-600 font-medium">New</span>
-                <span className="text-teal-700 font-bold">Database Environment</span>
-              </div>
-              <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-amber-200/80">
-                <div className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-                <span className="text-stone-700 text-[11px] font-semibold">
-                  Environment updated
-                </span>
-              </div>
-            </div>
-          </motion.div>
+            className="absolute left-[8.33%] top-[14px] hidden h-[3px] rounded-full bg-lure sm:block"
+            animate={{ width: `${(active / (stages.length - 1)) * 83.33}%` }}
+            transition={{ duration: 0.6, ease: 'easeInOut' }}
+            aria-hidden
+          />
+        <ol className="relative grid grid-cols-3 gap-y-5 sm:grid-cols-6">
+          {stages.map((s, i) => {
+            const isActive = i === active;
+            const done = i < active;
+            return (
+              <li key={s.id} className="relative flex flex-col items-center">
+                <button
+                  onClick={() => setActive(i)}
+                  aria-current={isActive ? 'step' : undefined}
+                  className={cn(
+                    'relative z-10 flex h-8 w-8 items-center justify-center rounded-full border text-xs font-semibold transition-colors',
+                    isActive && 'border-ink bg-lure text-ink',
+                    done && 'border-ink bg-ink text-white',
+                    !isActive && !done && 'border-rule-strong bg-sheet text-pencil hover:border-ink hover:text-ink'
+                  )}
+                >
+                  {i + 1}
+                </button>
+                <span className={cn('mt-2 text-[13px]', isActive ? 'font-semibold text-ink' : 'text-graphite')}>{s.label}</span>
+              </li>
+            );
+          })}
+        </ol>
+        </div>
 
-          <div className="flex items-center gap-4 text-xs font-semibold text-stone-500">
-            <span>Cycle #47</span>
-            <span>•</span>
-            <span>Running for 2h 14m</span>
+        <div className="mt-6 grid gap-4 border-t border-rule pt-5 md:grid-cols-[1.3fr_1fr]">
+          <div>
+            <p className="text-xs text-pencil">Now running</p>
+            <p className="mt-1 text-lg font-semibold tracking-tight text-ink">{stage.label}</p>
+            <p className="mt-1 max-w-[46ch] text-sm text-graphite">{stage.description}</p>
           </div>
+          <dl className="space-y-3 rounded-lg bg-sunk p-4 text-sm">
+            <div className="flex justify-between gap-3">
+              <dt className="text-graphite">Current strategy</dt>
+              <dd className="text-right font-semibold text-ink">Database-focused deception</dd>
+            </div>
+            <div>
+              <div className="flex justify-between">
+                <dt className="text-graphite">Confidence</dt>
+                <dd className="font-semibold text-ink">94%</dd>
+              </div>
+              <Meter value={94} className="mt-2" tone="bg-lure" />
+            </div>
+          </dl>
         </div>
       </div>
-    </motion.div>
+    </Panel>
   );
 }

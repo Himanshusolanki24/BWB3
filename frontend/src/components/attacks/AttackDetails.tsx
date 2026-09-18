@@ -1,96 +1,44 @@
-'use client';
-
-import { Shield, Clock, Terminal, Globe, Server, AlertTriangle, ShieldCheck, Flame } from 'lucide-react';
-import type { Attacker, AttackSession } from '@/types';
-import { getRiskBgColor } from '@/lib/utils';
 import Link from 'next/link';
+import type { Attacker, AttackSession } from '@/types';
+import { Panel, RiskBadge, Tag } from '@/components/ui';
 
-interface AttackDetailsProps {
-  session: AttackSession;
-  attacker: Attacker;
-}
+export function AttackDetails({ session, attacker }: { session: AttackSession; attacker: Attacker }) {
+  const facts = [
+    { label: 'Decoy', value: session.honeypot },
+    { label: 'Protocol', value: session.protocol },
+    { label: 'Time in decoy', value: session.duration },
+    { label: 'Commands logged', value: attacker.commandHistory.length },
+  ];
 
-export function AttackDetails({ session, attacker }: AttackDetailsProps) {
   return (
-    <div className="card-interactive p-5 space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-200">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono px-2 py-0.5 rounded bg-amber-100 border border-amber-300 text-amber-800 font-bold">
-              {session.attackerId}
-            </span>
-            <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold border ${getRiskBgColor(session.risk)}`}>
-              {session.risk} THREAT
-            </span>
-            <span className="text-xs text-stone-500">
-              Session ID: <span className="font-mono text-stone-800 font-semibold">{session.id}</span>
-            </span>
-          </div>
-          <p className="text-xs text-stone-600 mt-1">
-            Origin: <span className="text-teal-700 font-mono font-bold">{attacker.sourceIP}</span> ({attacker.country || 'External'}) • ASN: {attacker.asn || 'AS4134'}
-          </p>
-        </div>
-
-        <Link
-          href={`/attackers?id=${attacker.id}`}
-          className="text-xs font-bold px-3 py-1.5 rounded-lg bg-stone-100 border border-stone-300 text-amber-800 hover:bg-amber-50 hover:border-amber-400 transition-colors self-start sm:self-auto shadow-xs"
-        >
-          View Full Profile →
-        </Link>
-      </div>
-
-      {/* Meta Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-        <div className="p-3 rounded-lg bg-stone-100/70 border border-stone-200">
-          <span className="text-[11px] text-stone-500 font-semibold flex items-center gap-1 mb-1">
-            <Server className="w-3.5 h-3.5 text-teal-600" />
-            Honeypot
-          </span>
-          <span className="font-bold text-stone-900 font-mono">{session.honeypot}</span>
-        </div>
-
-        <div className="p-3 rounded-lg bg-stone-100/70 border border-stone-200">
-          <span className="text-[11px] text-stone-500 font-semibold flex items-center gap-1 mb-1">
-            <Globe className="w-3.5 h-3.5 text-orange-600" />
-            Protocol
-          </span>
-          <span className="font-bold text-stone-900 font-mono">{session.protocol}</span>
-        </div>
-
-        <div className="p-3 rounded-lg bg-stone-100/70 border border-stone-200">
-          <span className="text-[11px] text-stone-500 font-semibold flex items-center gap-1 mb-1">
-            <Clock className="w-3.5 h-3.5 text-amber-600" />
-            Session Duration
-          </span>
-          <span className="font-bold text-stone-900 font-mono">{session.duration}</span>
-        </div>
-
-        <div className="p-3 rounded-lg bg-stone-100/70 border border-stone-200">
-          <span className="text-[11px] text-stone-500 font-semibold flex items-center gap-1 mb-1">
-            <Terminal className="w-3.5 h-3.5 text-amber-700" />
-            Commands Logged
-          </span>
-          <span className="font-bold text-stone-900 font-mono">{attacker.commandHistory.length} cmds</span>
-        </div>
-      </div>
-
-      {/* Active Behaviors */}
-      <div className="pt-2">
-        <span className="text-[11px] text-stone-500 uppercase tracking-wider font-bold block mb-2">
-          Observed Attacker Behaviors:
+    <Panel
+      title={
+        <span className="flex flex-wrap items-center gap-2">
+          <span className="font-mono">{session.attackerId}</span>
+          <RiskBadge risk={session.risk} />
         </span>
-        <div className="flex flex-wrap gap-2">
-          {session.behaviors.map((b) => (
-            <span
-              key={b}
-              className="text-xs px-2.5 py-1 rounded-md bg-stone-100 border border-stone-300 text-stone-900 font-medium flex items-center gap-1.5 shadow-xs"
-            >
-              <Flame className="w-3.5 h-3.5 text-amber-600" />
-              {b}
-            </span>
-          ))}
-        </div>
+      }
+      note={
+        <>
+          From <span className="font-mono text-ink">{attacker.sourceIP}</span> in {attacker.country || 'an unknown country'}, {attacker.asn || 'AS4134'}. Session {session.id}.
+        </>
+      }
+      action={<Link href={`/attackers?id=${attacker.id}`} className="btn">Open profile</Link>}
+    >
+      <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-rule bg-rule sm:grid-cols-4">
+        {facts.map((f) => (
+          <div key={f.label} className="bg-sunk px-3.5 py-3">
+            <dt className="text-xs text-pencil">{f.label}</dt>
+            <dd className="mt-1 font-mono text-sm font-medium text-ink">{f.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <span className="text-[13px] text-graphite">Seen doing</span>
+        {session.behaviors.map((b) => (
+          <Tag key={b} className="font-sans text-xs text-ink">{b}</Tag>
+        ))}
       </div>
-    </div>
+    </Panel>
   );
 }

@@ -1,122 +1,83 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, X, ArrowRight, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, RefreshCw } from 'lucide-react';
+
+const alerts = [
+  {
+    behavior: 'Database reconnaissance',
+    previous: 'Generic Linux files',
+    next: 'Targeted MySQL environment with dump decoy',
+    confidence: 94,
+  },
+  {
+    behavior: 'Credential dumping via /etc/shadow',
+    previous: 'Standard Linux decoys',
+    next: 'Canary SSH keys and honeyhash injections',
+    confidence: 98,
+  },
+];
 
 export function AdaptationAlert() {
-  const [isVisible, setIsVisible] = useState(true);
-  const [isSimulating, setIsSimulating] = useState(false);
-  const [alertData, setAlertData] = useState({
-    behavior: 'Database Reconnaissance',
-    previousDeception: 'Generic Linux Files',
-    newDeception: 'Targeted Database Environment (MySQL/Dump Decoy)',
-    confidence: 94,
-    time: 'Just now',
-  });
+  const [index, setIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+  const [simulating, setSimulating] = useState(false);
+  const alert = alerts[index];
 
-  const simulateNewAdaptation = () => {
-    setIsSimulating(true);
+  const simulate = () => {
+    setSimulating(true);
     setTimeout(() => {
-      setAlertData({
-        behavior: 'Credential Dumping via /etc/shadow',
-        previousDeception: 'Standard Linux Decoys',
-        newDeception: 'Canary SSH Keys & Honeyhash Injections',
-        confidence: 98,
-        time: 'Just now',
-      });
-      setIsVisible(true);
-      setIsSimulating(false);
+      setIndex((i) => (i + 1) % alerts.length);
+      setVisible(true);
+      setSimulating(false);
     }, 600);
   };
 
   return (
-    <div className="w-full">
-      <AnimatePresence>
-        {isVisible && (
-          <motion.div
-            initial={{ opacity: 0, y: -16, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -16, scale: 0.98 }}
-            transition={{ duration: 0.3 }}
-            className="mb-6 rounded-xl border border-amber-300 bg-gradient-to-r from-amber-50 via-white to-amber-50/60 p-5 backdrop-blur-sm relative overflow-hidden shadow-xs"
-          >
-            <div className="absolute top-0 left-0 bottom-0 w-[4px] bg-gradient-to-b from-amber-500 via-teal-500 to-amber-600" />
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-start sm:items-center gap-3.5">
-                <div className="p-2.5 rounded-lg bg-amber-100 border border-amber-300 text-amber-700 shrink-0">
-                  <Zap className="w-5 h-5 animate-pulse" />
-                </div>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-black tracking-wider uppercase text-amber-800">
-                      ⚡ ADAPTATION DETECTED
-                    </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 font-mono font-bold">
-                      Confidence: {alertData.confidence}%
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                    <span className="text-stone-600 font-medium">
-                      Behavior:{' '}
-                      <strong className="text-stone-900 font-bold">
-                        {alertData.behavior}
-                      </strong>
-                    </span>
-                    <span className="text-stone-400 hidden sm:inline">|</span>
-                    <span className="text-stone-600 font-medium">
-                      Previous:{' '}
-                      <span className="text-stone-400 line-through font-normal">
-                        {alertData.previousDeception}
-                      </span>
-                    </span>
-                    <span className="text-amber-600 font-bold">→</span>
-                    <span className="text-stone-600 font-medium">
-                      New:{' '}
-                      <strong className="text-teal-700 font-bold">
-                        {alertData.newDeception}
-                      </strong>
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-white border border-stone-300 text-[11px] text-emerald-700 font-semibold shadow-xs">
-                  <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-                  <span>Environment Updated</span>
-                </div>
-                <Link
-                  href="/deception-lab"
-                  className="flex items-center gap-1 px-3.5 py-1.5 rounded-lg bg-amber-600 text-white font-bold text-xs hover:bg-amber-700 transition-colors shadow-sm"
-                >
-                  <span>Inspect Decoy</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-                <button
-                  onClick={() => setIsVisible(false)}
-                  className="p-1.5 text-stone-400 hover:text-stone-700 transition-colors rounded-md hover:bg-stone-100 focus-ring"
-                  aria-label="Dismiss"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
+    <AnimatePresence mode="wait" initial={false}>
+      {visible ? (
+        <motion.section
+          key={index}
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.25 }}
+          className="sheet relative overflow-hidden border-lure/70 bg-lure-soft/60"
+          role="status"
+        >
+          <div className="absolute inset-y-0 left-0 w-1.5 bg-lure" />
+          <div className="flex flex-col gap-4 py-4 pl-6 pr-4 md:flex-row md:items-center">
+            <div className="min-w-0 flex-1">
+              <p className="text-[15px] font-semibold text-ink">
+                The environment adapted to a new behavior
+                <span className="ml-2 inline-block whitespace-nowrap rounded-full bg-sheet px-2 py-px text-xs font-semibold text-lure-ink ring-1 ring-lure">
+                  {alert.confidence}% confidence
+                </span>
+              </p>
+              <p className="mt-1 text-sm text-graphite">
+                Saw <strong className="font-semibold text-ink">{alert.behavior}</strong>. Replaced{' '}
+                <span className="text-pencil line-through decoration-pencil/60">{alert.previous}</span> with{' '}
+                <span className="mark font-semibold text-ink">{alert.next}</span>.
+              </p>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {!isVisible && (
-        <div className="mb-4 flex justify-end">
-          <button
-            onClick={simulateNewAdaptation}
-            disabled={isSimulating}
-            className="flex items-center gap-1.5 text-xs font-semibold text-stone-600 hover:text-amber-700 px-3 py-1.5 rounded border border-stone-300 hover:border-amber-400 transition-all bg-white shadow-xs"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isSimulating ? 'animate-spin' : ''}`} />
-            <span>{isSimulating ? 'Simulating...' : 'Simulate Adaptation'}</span>
+            <div className="flex shrink-0 items-center gap-2">
+              <Link href="/deception-lab" className="btn btn-primary">Inspect decoy</Link>
+              <button onClick={() => setVisible(false)} className="rounded-md p-2 text-graphite hover:bg-sheet hover:text-ink" aria-label="Dismiss">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </motion.section>
+      ) : (
+        <motion.div key="replay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-end">
+          <button onClick={simulate} disabled={simulating} className="btn">
+            <RefreshCw className={`h-3.5 w-3.5 ${simulating ? 'animate-spin' : ''}`} />
+            {simulating ? 'Simulating' : 'Simulate an adaptation'}
           </button>
-        </div>
+        </motion.div>
       )}
-    </div>
+    </AnimatePresence>
   );
 }

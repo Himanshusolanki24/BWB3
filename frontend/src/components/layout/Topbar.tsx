@@ -1,43 +1,40 @@
-'use client';
-
-import { Bell, User, Wifi } from 'lucide-react';
+import Link from 'next/link';
+import { Bell, Search } from 'lucide-react';
+import { Logo } from './Sidebar';
 
 export function Topbar() {
   return (
-    <header className="h-16 border-b border-stone-200 bg-white/90 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-30 shadow-xs">
-      <div className="lg:hidden flex items-center gap-2">
-        <div className="w-7 h-7 rounded-md bg-gradient-to-br from-amber-600 to-teal-600 flex items-center justify-center shadow-xs">
-          <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10 2L3 7v6c0 4.4 3 7.5 7 9 4-1.5 7-4.6 7-9V7l-7-5z" />
-          </svg>
-        </div>
-        <span className="font-extrabold text-xs tracking-widest text-stone-900">Honeypot</span>
-      </div>
-
-      <div className="hidden lg:block" />
-
-      <div className="flex items-center gap-4">
-        <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-300 shadow-xs">
-          <Wifi className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
-          <span className="text-xs font-extrabold text-emerald-800 tracking-wide">ONLINE</span>
+    <header className="sticky top-0 z-30 border-b border-rule bg-paper/85 backdrop-blur-md">
+      <div className="mx-auto flex h-16 w-full max-w-[1480px] items-center gap-4 px-4 sm:px-6 lg:px-10">
+        <div className="lg:hidden">
+          <Logo />
         </div>
 
-        <button
-          className="relative p-2 rounded-lg text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition-colors focus-ring"
-          aria-label="Notifications"
-        >
-          <Bell className="w-[18px] h-[18px]" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white" />
-        </button>
+        <label className="relative hidden max-w-sm flex-1 md:block">
+          <span className="sr-only">Search</span>
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-pencil" />
+          <input className="field pl-9" placeholder="Search IPs, sessions, indicators" />
+        </label>
 
-        <button
-          className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-stone-100 transition-colors focus-ring"
-          aria-label="User profile"
-        >
-          <div className="w-8 h-8 rounded-full bg-stone-100 border border-stone-300 flex items-center justify-center shadow-xs">
-            <User className="w-4 h-4 text-stone-600" />
-          </div>
-        </button>
+        <div className="ml-auto flex items-center gap-2">
+          <Link
+            href="/live-attacks"
+            className="hidden items-center gap-2 rounded-full border border-signal/25 bg-signal-soft px-3 py-1 text-[13px] font-semibold text-signal sm:flex"
+          >
+            <span className="live-dot" />
+            7 attackers engaged
+          </Link>
+          <button className="relative rounded-md p-2 text-graphite hover:bg-sheet hover:text-ink" aria-label="Notifications, 3 unread">
+            <Bell className="h-[18px] w-[18px]" />
+            <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-lure ring-2 ring-paper" />
+          </button>
+          <button
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-ink text-xs font-semibold text-white"
+            aria-label="Account"
+          >
+            HS
+          </button>
+        </div>
       </div>
     </header>
   );
