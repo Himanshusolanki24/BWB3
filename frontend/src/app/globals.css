@@ -125,6 +125,92 @@
   @keyframes live-ring { 0% { transform: scale(0.5); opacity: 0.7; } 100% { transform: scale(1.4); opacity: 0; } }
 }
 
+/* ───────────── Landing ───────────── */
+@layer components {
+  .hero-title { font-size: clamp(3.4rem, 9.5vw, 8.5rem); font-weight: 600; line-height: 0.92; letter-spacing: -0.045em; }
+  .section-title { font-size: clamp(2rem, 4.4vw, 3.4rem); font-weight: 600; line-height: 1.02; letter-spacing: -0.035em; }
+
+  /* The headline enacts the product: the old word is struck, the new one planted. */
+  .hero-swap { display: inline-flex; flex-wrap: wrap; align-items: baseline; column-gap: 0.28em; }
+  .hero-old { position: relative; color: var(--color-pencil); animation: hero-dim 0.4s 1s ease-out both; }
+  .hero-old::after {
+    content: ''; position: absolute; left: -0.04em; right: -0.04em; top: 54%; height: 0.075em;
+    background: var(--color-ink); transform: scaleX(0); transform-origin: left;
+    animation: hero-strike 0.55s 0.6s cubic-bezier(0.7, 0, 0.25, 1) forwards;
+  }
+  .hero-new { display: inline-block; animation: hero-arrive 0.6s 1.15s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .hero-mark {
+    background-image: linear-gradient(100deg, transparent 0.06em, var(--color-lure) 0.1em, color-mix(in srgb, var(--color-lure) 80%, white) calc(100% - 0.1em), transparent calc(100% - 0.06em));
+    background-repeat: no-repeat; background-position: 0 86%; background-size: 0% 0.42em;
+    animation: hero-sweep 0.7s 1.55s cubic-bezier(0.6, 0, 0.2, 1) forwards;
+  }
+  .hero-copy { animation: hero-arrive 0.7s 0.2s ease-out both; }
+  .hero-stage { animation: hero-rise 0.9s 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  @keyframes hero-strike { to { transform: scaleX(1); } }
+  @keyframes hero-dim { to { opacity: 0.55; } }
+  @keyframes hero-arrive { from { opacity: 0; transform: translateY(0.25em); } }
+  @keyframes hero-sweep { to { background-size: 100% 0.42em; } }
+  @keyframes hero-rise { from { opacity: 0; transform: translateY(40px) scale(0.985); } }
+
+  /* Session theatre */
+  .theatre-line { animation: theatre-in 0.25s ease-out both; }
+  .theatre-out { animation: theatre-in 0.3s ease-out both; }
+  .theatre-caret { display: inline-block; width: 0.55em; height: 1.1em; margin-left: 1px; vertical-align: -0.2em; background: var(--color-ink); animation: caret 1s steps(1) infinite; }
+  .theatre-file { position: relative; width: fit-content; color: var(--color-ink); transition: opacity 0.6s 0.5s, color 0.6s 0.5s; }
+  .theatre-file-name { position: relative; }
+  .theatre-file-name::after {
+    content: ''; position: absolute; left: -2px; right: -2px; top: 55%; height: 1.5px; background: var(--color-signal);
+    transform: scaleX(0); transform-origin: left; transition: transform 0.45s cubic-bezier(0.7, 0, 0.25, 1);
+  }
+  .theatre-file.is-gone { opacity: 0.45; color: var(--color-pencil); }
+  .theatre-file.is-gone .theatre-file-name::after { transform: scaleX(1); }
+  .theatre-file.is-new { animation: theatre-plant 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+  .theatre-file.is-new .theatre-file-name {
+    background-image: linear-gradient(var(--color-lure), var(--color-lure));
+    background-repeat: no-repeat; background-position: 0 85%; background-size: 0% 45%;
+    animation: hero-sweep-sm 0.6s 0.25s cubic-bezier(0.6, 0, 0.2, 1) forwards;
+  }
+  .theatre-meter { transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .theatre-analyzing { color: var(--color-pencil); animation: pulse-text 0.9s ease-in-out infinite; }
+  .theatre-note { animation: theatre-in 0.4s ease-out both; }
+  @keyframes theatre-in { from { opacity: 0; transform: translateY(4px); } }
+  @keyframes theatre-plant { from { opacity: 0; transform: translateX(-10px); } }
+  @keyframes hero-sweep-sm { to { background-size: 100% 45%; } }
+  @keyframes caret { 50% { opacity: 0; } }
+  @keyframes pulse-text { 50% { opacity: 0.45; } }
+
+  /* Race + loop. Default (no scroll timelines, or reduced motion) is the finished picture. */
+  .race-track { position: relative; height: 2.75rem; border-radius: 6px; background: var(--color-sunk); box-shadow: inset 0 0 0 1px var(--color-rule); }
+  .race-fill { position: absolute; inset: 0; border-radius: 6px; transform-origin: left; transform: scaleX(var(--to)); }
+  .race-rider { position: absolute; inset: 0; pointer-events: none; transform: translateX(calc(var(--to) * 100%)); }
+  .race-dot { position: absolute; left: 0; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 99px; box-shadow: 0 0 0 4px var(--color-sheet); }
+  .race-tick { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--color-ink); }
+  .race-tick-label { position: absolute; top: calc(100% + 6px); left: 0; transform: translateX(-50%); white-space: nowrap; font-size: 12px; font-weight: 600; color: var(--color-ink); }
+  .loop-line { position: absolute; left: 0; right: 0; top: 14px; height: 3px; border-radius: 3px; background: var(--color-lure); transform-origin: left; display: none; }
+  @media (min-width: 1024px) { .loop-line { display: block; } }
+  .loop-node { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 99px; border: 1.5px solid var(--color-ink); background: var(--color-lure); font-size: 13px; font-weight: 600; color: var(--color-ink); }
+  @media (min-width: 1024px) { .loop-node { position: absolute; top: 0; left: 0; } }
+
+  .contrast th, .contrast td { padding: 1.1rem 1.5rem 1.1rem 0; vertical-align: top; border-bottom: 1px solid var(--color-rule); }
+  .contrast thead th { padding-top: 0; border-bottom-color: var(--color-rule-strong); }
+  .contrast-tick { display: inline-block; width: 8px; height: 8px; margin: 0 10px 1px 0; border-radius: 2px; background: var(--color-lure); box-shadow: 0 0 0 1px var(--color-ink); }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .scrub { view-timeline: --scrub block; }
+    .scrub-bar, .scrub-ride { animation: scrub-from-zero linear both; animation-timeline: --scrub; animation-range: cover 20% cover calc(20% + var(--span, 35%)); }
+    .scrub-bar { animation-name: scrub-bar; }
+    .scrub-ride { animation-name: scrub-ride; }
+    .scrub-pop { animation: scrub-pop linear both; animation-timeline: --scrub; animation-range: cover var(--at) cover calc(var(--at) + 4%); }
+    .loop-node.scrub-pop { animation-name: scrub-node; }
+    @keyframes scrub-bar { from { transform: scaleX(0); } }
+    @keyframes scrub-ride { from { transform: translateX(0); } }
+    @keyframes scrub-pop { from { opacity: 0; transform: translateY(6px); } }
+    @keyframes scrub-node { from { background: var(--color-sheet); border-color: var(--color-rule-strong); color: var(--color-pencil); } }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }

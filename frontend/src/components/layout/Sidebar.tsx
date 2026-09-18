@@ -11,7 +11,7 @@ const groups = [
   {
     label: 'Watch',
     items: [
-      { href: '/', label: 'Overview', icon: LayoutDashboard },
+      { href: '/overview', label: 'Overview', icon: LayoutDashboard },
       { href: '/live-attacks', label: 'Live attacks', icon: Radio },
       { href: '/attackers', label: 'Attackers', icon: UserSearch },
       { href: '/intelligence', label: 'Intelligence', icon: Brain },
@@ -36,9 +36,9 @@ const groups = [
 
 const mobileItems = groups.flatMap((g) => g.items).slice(0, 5);
 
-export function Logo() {
+export function Logo({ href = '/overview' }: { href?: string }) {
   return (
-    <Link href="/" className="flex items-center gap-2.5" aria-label="Honeypot home">
+    <Link href={href} className="flex items-center gap-2.5" aria-label="Honeypot home">
       <svg width="26" height="28" viewBox="0 0 26 28" aria-hidden>
         <path d="M13 1.5 24 7.75v12.5L13 26.5 2 20.25V7.75Z" fill="#F6C90E" stroke="#172048" strokeWidth="1.6" strokeLinejoin="round" />
         <path d="M13 8.5 19 12v6l-6 3.5L7 18v-6Z" fill="none" stroke="#172048" strokeWidth="1.4" strokeLinejoin="round" />

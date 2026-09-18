@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
 import { Schibsted_Grotesk, IBM_Plex_Mono } from 'next/font/google';
 import './globals.css';
-import { Sidebar } from '@/components/layout/Sidebar';
-import { Topbar } from '@/components/layout/Topbar';
 
 const schibsted = Schibsted_Grotesk({
   subsets: ['latin'],
@@ -26,15 +24,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${schibsted.variable} ${plexMono.variable}`}>
-      <body className="min-h-screen font-sans antialiased">
-        <Sidebar />
-        <div className="flex min-h-screen flex-col lg:pl-[232px]">
-          <Topbar />
-          <main className="mx-auto w-full max-w-[1480px] flex-1 px-4 pb-28 pt-6 sm:px-6 lg:px-10 lg:pb-12 lg:pt-8">
-            {children}
-          </main>
-        </div>
-      </body>
+      <body className="min-h-screen font-sans antialiased">{children}</body>
     </html>
   );
 }

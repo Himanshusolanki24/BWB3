@@ -59,8 +59,10 @@ src/components/
 
 ```
 src/app/
-├── layout.tsx          # Root layout with Sidebar & Topbar
-├── page.tsx            # Dashboard home
+├── layout.tsx          # Root layout: fonts + globals only
+├── page.tsx            # Marketing landing page (/) — hero SessionTheatre, scroll-scrubbed race & loop
+├── (console)/layout.tsx  # Sidebar & Topbar for every console route below
+├── (console)/overview/ # Dashboard (/overview)
 ├── attackers/          # Attacker Intelligence pages
 ├── evolution/          # Evolution Engine pages
 ├── honeypots/          # Honeypot Infrastructure pages
